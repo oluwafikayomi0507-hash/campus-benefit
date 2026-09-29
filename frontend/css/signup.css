@@ -1,0 +1,266 @@
+:root {
+    --cream: #F9F7F3;
+    --green: #1B6B3A;
+    --dark-green: #124A29;
+    --dark: #071b3a;
+    --text: #475467;
+    --border: #dfe3df;
+    --white: #ffffff;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Figtree", sans-serif;
+    background: var(--cream);
+    color: var(--dark);
+}
+
+.signup-page {
+    min-height: 100vh;
+    padding: 30px 6%;
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* Back button */
+
+.back-home {
+    width: fit-content;
+    color: var(--green);
+    text-decoration: none;
+    font-weight: 600;
+    transition: 0.3s ease;
+}
+
+.back-home:hover {
+    transform: translateX(-4px);
+}
+
+
+/* Main container */
+
+.signup-container {
+    width: 100%;
+    max-width: 560px;
+    margin: 35px auto 0;
+
+    background: var(--white);
+
+    border: 1px solid #e8e5df;
+    border-radius: 24px;
+
+    padding: 42px 48px;
+
+    box-shadow: 0 20px 60px rgba(7, 27, 58, 0.07);
+}
+
+
+/* Logo */
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    margin-bottom: 32px;
+
+    font-size: 19px;
+    font-weight: 800;
+}
+
+.logo-area img {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+}
+
+
+/* Heading */
+
+.signup-heading {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.signup-heading h1 {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.signup-heading p {
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+
+/* Form */
+
+.signup-form {
+    display: flex;
+    flex-direction: column;
+    gap: 19px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    height: 48px;
+
+    padding: 0 14px;
+
+    border: 1px solid var(--border);
+    border-radius: 9px;
+
+    background: white;
+
+    font-family: "Figtree", sans-serif;
+    font-size: 14px;
+    color: var(--dark);
+
+    outline: none;
+
+    transition: 0.2s ease;
+}
+
+.form-group input::placeholder {
+    color: #98a2b3;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(27, 107, 58, 0.08);
+}
+
+
+/* University + Level */
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+
+/* Button */
+
+.signup-button {
+    width: 100%;
+    height: 50px;
+
+    margin-top: 5px;
+
+    border: none;
+    border-radius: 9px;
+
+    background: var(--green);
+    color: white;
+
+    font-family: "Figtree", sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition: 0.3s ease;
+}
+
+.signup-button:hover {
+    background: var(--dark-green);
+    transform: translateY(-2px);
+}
+
+
+/* Login */
+
+.login-text {
+    text-align: center;
+    margin-top: 24px;
+
+    font-size: 14px;
+    color: var(--text);
+}
+
+.login-text a {
+    color: var(--green);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.login-text a:hover {
+    text-decoration: underline;
+}
+
+
+/* Footer */
+
+.bottom-text {
+    text-align: center;
+    color: #667085;
+    font-size: 13px;
+
+    margin-top: 25px;
+}
+
+
+/* Tablet */
+
+@media (max-width: 768px) {
+
+    .signup-page {
+        padding: 25px 5%;
+    }
+
+    .signup-container {
+        margin-top: 30px;
+        padding: 38px 35px;
+    }
+}
+
+
+/* Phone */
+
+@media (max-width: 500px) {
+
+    .signup-page {
+        padding: 22px 5%;
+    }
+
+    .signup-container {
+        padding: 32px 22px;
+        border-radius: 20px;
+    }
+
+    .signup-heading h1 {
+        font-size: 27px;
+    }
+
+    .signup-heading p {
+        font-size: 14px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 19px;
+    }
+}

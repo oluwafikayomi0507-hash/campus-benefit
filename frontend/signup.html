@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Create Account | Campus Benefit</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="css/signup.css">
+</head>
+
+<body>
+
+    <main class="signup-page">
+
+        <a href="get-started.html" class="back-home">
+            ← Back
+        </a>
+
+        <section class="signup-container">
+
+            <!-- Logo -->
+            <div class="logo-area">
+                <img src="img/logo-symbol.png" alt="Campus Benefit logo">
+                <span>Campus Benefit</span>
+            </div>
+
+
+            <!-- Heading -->
+            <div class="signup-heading">
+                <h1>Create your account</h1>
+
+                <p>
+                    Join Campus Benefit and make the most of
+                    your university experience.
+                </p>
+            </div>
+
+
+            <!-- Form -->
+            <form class="signup-form">
+
+                <div class="form-group">
+                    <label for="full-name">Full Name</label>
+                    <input
+                        type="text"
+                        id="full-name"
+                        name="full-name"
+                        placeholder="Enter your full name"
+                        required>
+                </div>
+
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder="Enter your email address"
+                        required>
+                </div>
+
+
+                <div class="form-row">
+
+                    <div class="form-group">
+                        <label for="university">University</label>
+
+                        <select id="university" name="university" required>
+                            <option value="">Select university</option>
+                            <option value="LASU">LASU</option>
+                            <option value="UNILAG">UNILAG</option>
+                            <option value="UI">University of Ibadan</option>
+                            <option value="YABATECH">YABATECH</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="level">Level</label>
+
+                        <select id="level" name="level" required>
+                            <option value="">Select level</option>
+                            <option value="100">100 Level</option>
+                            <option value="200">200 Level</option>
+                            <option value="300">300 Level</option>
+                            <option value="400">400 Level</option>
+                            <option value="500">500 Level</option>
+                            <option value="600">600 Level</option>
+                        </select>
+                    </div>
+
+                </div>
+
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Create a password"
+                        required>
+                </div>
+
+
+                <div class="form-group">
+                    <label for="confirm-password">Confirm Password</label>
+
+                    <input
+                        type="password"
+                        id="confirm-password"
+                        name="confirm-password"
+                        placeholder="Confirm your password"
+                        required>
+                </div>
+
+
+                <button type="submit" class="signup-button">
+                    Create Account
+                </button>
+
+            </form>
+
+
+            <!-- Login -->
+            <p class="login-text">
+                Already have an account?
+                <a href="login.html">Log in</a>
+            </p>
+
+        </section>
+
+
+        <p class="bottom-text">
+            © 2026 Campus Benefit. Built for Nigerian students.
+        </p>
+
+    </main>
+
+</body>
+
+</html>

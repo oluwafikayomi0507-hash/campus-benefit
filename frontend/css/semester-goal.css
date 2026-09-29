@@ -1,0 +1,312 @@
+/* Goal Form */
+:root {
+    --cream: #F9F7F3;
+    --green: #1B6B3A;
+    font-family: 'Figtree', sans-serif;
+}
+
+.goals-page {
+    min-height: 100vh;
+    padding: 50px 8%;
+    background: #f8f6f0;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--green);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: bold;
+    margin-bottom: 35px;
+    transition: 0.3s ease;
+}
+
+.back-link:hover {
+    transform: translateX(-4px);
+}
+
+.goals-heading {
+    margin-bottom: 45px;
+    text-align: center;
+}
+
+.goals-heading span {
+    color: var(--green);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+}
+
+.goals-heading h1 {
+    margin: 8px 0;
+    font-size: 42px;
+    color:  rgb(9, 9, 51);
+}
+
+.goals-heading p {
+    color: #666;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.goals-card {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 30px;
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+}
+
+.goals-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.goals-header h2 {
+    margin-bottom: 5px;
+    color: rgb(9, 9, 51);
+}
+
+.goals-header p {
+    color: #777;
+    font-size: 14px;
+}
+
+.add-goal {
+    padding: 12px 18px;
+    border: none;
+    border-radius: 8px;
+    background: var(--green);
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.add-goal:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+.goals-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.empty-goals {
+    grid-column: 1 / -1;
+    padding: 55px 20px;
+    text-align: center;
+    background: #fcfdfc;
+    border: 1px dashed #dce8e2;
+    border-radius: 10px;
+}
+
+.empty-goals span {
+    display: block;
+    margin-bottom: 12px;
+    font-size: 35px;
+}
+
+.empty-goals h3 {
+    margin-bottom: 7px;
+    color: #1d2d26;
+}
+
+.empty-goals p {
+    color: #777;
+    font-size: 14px;
+}
+
+
+/* Goal Form */
+
+.goal-form {
+    margin-bottom: 30px;
+    padding: 25px;
+    background: #fcfdfc;
+    border: 1px solid #dce8e2;
+    border-radius: 10px;
+}
+
+.goal-form h3 {
+    margin-bottom: 18px;
+    color: #1d2d26;
+}
+
+.goal-form input,
+.goal-form textarea {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 12px;
+    border: 1px solid #dce8e2;
+    border-radius: 7px;
+    outline: none;
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.goal-form textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.goal-form input:focus,
+.goal-form textarea:focus {
+    border-color: var(--green);
+}
+
+.goal-form-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.save-goal,
+.cancel-goal {
+    padding: 11px 16px;
+    border-radius: 7px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.save-goal {
+    border: none;
+    background: var(--green);
+    color: white;
+}
+
+.cancel-goal {
+    border: 1px solid #ddd;
+    background: white;
+    color: #666;
+}
+
+
+/* Goal Items */
+
+.goal-item {
+    padding: 20px;
+    background: #fcfdfc;
+    border: 1px solid #dce8e2;
+    border-radius: 10px;
+}
+
+.goal-item h3 {
+    margin-bottom: 8px;
+    color: #1d2d26;
+}
+
+.goal-item p {
+    margin-bottom: 10px;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.goal-item small {
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.goal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.complete-goal,
+.delete-goal {
+    padding: 8px 11px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.complete-goal {
+    border: none;
+    background: var(--green);
+    color: white;
+}
+
+.delete-goal {
+    border: 1px solid #ff6b6b;
+    background: transparent;
+    color: #ff6b6b;
+}
+
+.delete-goal:hover {
+    background: #ff6b6b;
+    color: white;
+}
+
+.goal-item.completed {
+    opacity: 0.7;
+}
+
+.goal-item.completed h3 {
+    text-decoration: line-through;
+}
+
+
+/* Mobile */
+
+@media (max-width: 600px) {
+
+    .goals-page {
+        padding: 30px 5%;
+    }
+
+    .goals-heading h1 {
+        font-size: 36px;
+    }
+
+    .goals-card {
+        padding: 20px;
+    }
+
+    .goals-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .add-goal {
+        width: 100%;
+    }
+
+    .goals-list {
+        grid-template-columns: 1fr;
+    }
+
+    .goal-form {
+        padding: 20px;
+    }
+
+    .goal-form-buttons {
+        flex-direction: column;
+    }
+
+    .save-goal,
+    .cancel-goal {
+        width: 100%;
+    }
+
+    .goal-actions {
+        flex-direction: column;
+    }
+
+    .complete-goal,
+    .delete-goal {
+        width: 100%;
+    }
+}

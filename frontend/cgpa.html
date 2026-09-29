@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CGPA Calculator | Campus Benefit</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/cgpa.css">
+</head>
+
+<body>
+
+    
+
+    <main class="cgpa-page">
+
+        <a href="index.html" class="back-home">← Back to Campus Benefit</a>
+
+        <div class="cgpa-container">
+
+            <div class="cgpa-heading">
+                <p>ACADEMIC TOOL</p>
+                <h1>CGPA Calculator</h1>
+                <span>Calculate your CGPA using the Nigerian 5-point grading scale.</span>
+            </div>
+
+            <div class="cgpa-card">
+
+                <div class="course-row">
+                    <input type="text" placeholder="Course name">
+                    <input type="number" placeholder="Units" min="1">
+
+                    <select>
+                        <option value="">Grade</option>
+                        <option value="5">A</option>
+                        <option value="4">B</option>
+                        <option value="3">C</option>
+                        <option value="2">D</option>
+                        <option value="1">E</option>
+                        <option value="0">F</option>
+                    </select>
+
+                </div>
+
+                <button class="add-course"  type="button">+ Add Course</button>
+
+                <button class="remove-course" type="button">Remove</button>
+
+                <button class="calculate-cgpa" type="button">
+                    Calculate CGPA
+                </button>
+
+                <div class="cgpa-result">
+                    <p>Your CGPA</p>
+                    <h2 id="cgpa-value">0.00</h2>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <script src="js/cgpa.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,304 @@
+:root {
+    --cream: #F9F7F3;
+    --green: #1B6B3A;
+}
+
+.planner-page {
+    min-height: 100vh;
+    padding: 50px 8%;
+    background: #f8f6f0;
+    font-family: 'Figtree', sans-serif;
+
+}
+
+/* Back link */
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--green);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 600;
+    margin-bottom: 35px;
+    transition: 0.3s ease;
+}
+
+.back-link:hover {
+    transform: translateX(-4px);
+}
+
+/* Heading */
+.planner-heading {
+    margin-bottom: 35px;
+    text-align: center;
+}
+
+.planner-heading span {
+    color: var(--green);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+}
+
+.planner-heading h1 {
+    margin: 8px 0;
+    font-size: 42px;
+    color: #1d2d26;
+}
+
+.planner-heading p {
+    color: #666;
+    font-size: 12px;
+}
+
+/* Main card */
+.planner-card {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: white;
+    padding: 30px;
+    border-radius: 14px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+}
+
+/* Calendar header */
+.planner-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.planner-header h2 {
+    color: #1d2d26;
+    margin-bottom: 5px;
+}
+
+.planner-header p {
+    color: #777;
+    font-size: 14px;
+}
+
+/* Add button */
+.add-study {
+    border: none;
+    background: var(--green);
+    color: white;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.add-study:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+/* Calendar */
+.calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 12px;
+}
+
+/* Day */
+.day {
+    min-height: 220px;
+    border: 1px solid #dce8e2;
+    border-radius: 10px;
+    padding: 15px;
+    background: #fcfdfc;
+}
+
+.day h3 {
+    color: var(--green);
+    font-size: 14px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #dce8e2;
+}
+
+/* Study session */
+.study-session {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 12px;
+    background: #eaf6f1;
+    border-radius: 8px;
+}
+
+.study-session strong {
+    color: #1d2d26;
+    font-size: 14px;
+}
+
+.study-session span {
+    color: #555;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.study-session small {
+    color: var(--green);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* Rest day */
+.rest-day {
+    color: #777;
+    font-size: 12px;
+    line-height: 1.5;
+    text-align: center;
+    padding-top: 35px;
+}
+
+.study-form {
+    margin-bottom: 30px;
+    padding: 25px;
+    border: 1px solid #dce8e2;
+    border-radius: 10px;
+    background: #fcfdfc;
+}
+
+.study-form h3 {
+    color: #1d2d26;
+    margin-bottom: 18px;
+}
+
+.study-form select,
+.study-form input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 12px;
+    border: 1px solid #dce8e2;
+    border-radius: 7px;
+    outline: none;
+    font-size: 14px;
+}
+
+.study-form select:focus,
+.study-form input:focus {
+    border-color: var(--green);
+}
+
+.form-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.save-session,
+.cancel-session {
+    padding: 11px 16px;
+    border-radius: 7px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.save-session {
+    border: none;
+    background: var(--green);
+    color: white;
+}
+
+.cancel-session {
+    border: 1px solid #ddd;
+    background: white;
+    color: #666;
+}
+
+.delete-session {
+    margin-top: 5px;
+    padding: 6px 8px;
+    border: none;
+    border-radius: 5px;
+    background: transparent;
+    color: #ff6b6b;
+    font-size: 11px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.delete-session:hover {
+    text-decoration: underline;
+}
+
+.planner-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.clear-schedule {
+    padding: 12px 18px;
+    border: 1px solid #ff6b6b;
+    border-radius: 8px;
+    background: transparent;
+    color: #ff6b6b;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.clear-schedule:hover {
+    background: #ff6b6b;
+    color: white;
+}
+
+@media (max-width: 600px) {
+    .planner-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .clear-schedule {
+        width: 100%;
+    }
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+    .calendar {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .planner-page {
+        padding: 30px 5%;
+    }
+
+    .planner-heading h1 {
+        font-size: 36px;
+    }
+
+    .planner-card {
+        padding: 20px;
+    }
+
+    .planner-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .add-study {
+        width: 100%;
+    }
+
+    .calendar {
+        grid-template-columns: 1fr;
+    }
+
+    .day {
+        min-height: auto;
+    }
+}

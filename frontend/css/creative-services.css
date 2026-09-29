@@ -1,0 +1,248 @@
+/* =================================
+   CREATIVE SERVICES - CAMPUS BENEFIT
+================================= */
+
+.creative-page {
+    min-height: 80vh;
+    padding: 90px 8%;
+    background: #f9f7f3;
+}
+
+
+/* =================================
+   BACK TO CAMPUS BENEFIT
+================================= */
+
+.back-home {
+    position: absolute;
+    top: 30px;
+    left: 8%;
+
+    color: #1b6b3a;
+    text-decoration: none;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    transition: 0.3s ease;
+}
+
+.back-home:hover {
+    color: #14552e;
+    transform: translateX(-3px);
+}
+
+
+/* =================================
+   PAGE HEADING
+================================= */
+
+.creative-heading {
+    max-width: 720px;
+    margin: 0 auto 50px;
+    text-align: center;
+}
+
+.section-label {
+    display: inline-block;
+    margin-bottom: 12px;
+
+    color: #1b6b3a;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+}
+
+.creative-heading h1 {
+    margin: 0 0 15px;
+
+    color: #071b3a;
+    font-size: 42px;
+    line-height: 1.2;
+}
+
+.creative-heading p {
+    max-width: 650px;
+    margin: 0 auto;
+
+    color: #666;
+    font-size: 16px;
+    line-height: 1.7;
+}
+
+
+/* =================================
+   COMING SOON CONTAINER
+================================= */
+
+.creative-coming-soon {
+    max-width: 650px;
+    margin: 0 auto;
+    padding: 55px 45px;
+
+    background: #ffffff;
+
+    border: 1px solid #e5e9e6;
+    border-radius: 24px;
+
+    text-align: center;
+
+    box-shadow: 0 15px 40px rgba(27, 107, 58, 0.07);
+
+    transition: 0.3s ease;
+}
+
+.creative-coming-soon:hover {
+    transform: translateY(-5px);
+
+    box-shadow: 0 20px 45px rgba(27, 107, 58, 0.12);
+}
+
+
+/* =================================
+   ICON
+================================= */
+
+.creative-icon {
+    width: 75px;
+    height: 75px;
+
+    margin: 0 auto 25px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #eaf4ed;
+
+    border-radius: 50%;
+
+    font-size: 32px;
+}
+
+
+/* =================================
+   COMING SOON TEXT
+================================= */
+
+.creative-coming-soon h2 {
+    margin: 0 0 12px;
+
+    color: #1b6b3a;
+    font-size: 30px;
+}
+
+.creative-coming-soon p {
+    max-width: 500px;
+    margin: 0 auto 28px;
+
+    color: #666;
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+
+/* =================================
+   SERVICE BUTTON
+================================= */
+
+.creative-button {
+    display: inline-block;
+
+    padding: 13px 24px;
+
+    background: #1b6b3a;
+    color: #ffffff;
+
+    border-radius: 8px;
+
+    text-decoration: none;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    transition: 0.3s ease;
+}
+
+.creative-button:hover {
+    background: #14552e;
+    transform: translateY(-2px);
+}
+
+
+/* =================================
+   SMALL NOTE
+================================= */
+
+.coming-note {
+    display: block;
+
+    margin-top: 20px;
+
+    color: #888;
+    font-size: 12px;
+}
+
+
+/* =================================
+   TABLET
+================================= */
+
+@media (max-width: 900px) {
+
+    .creative-page {
+        padding: 75px 6%;
+    }
+
+    .creative-heading h1 {
+        font-size: 36px;
+    }
+
+    .back-home {
+        left: 6%;
+    }
+}
+
+
+/* =================================
+   MOBILE
+================================= */
+
+@media (max-width: 600px) {
+
+    .creative-page {
+        padding: 60px 5%;
+    }
+
+    .back-home {
+        top: 20px;
+        left: 5%;
+        font-size: 13px;
+    }
+
+    .creative-heading h1 {
+        font-size: 31px;
+    }
+
+    .creative-heading p {
+        font-size: 14px;
+    }
+
+    .creative-coming-soon {
+        padding: 45px 25px;
+        border-radius: 20px;
+    }
+
+    .creative-coming-soon h2 {
+        font-size: 26px;
+    }
+
+    .creative-coming-soon p {
+        font-size: 14px;
+    }
+
+    .creative-button {
+        width: 100%;
+        box-sizing: border-box;
+    }
+}

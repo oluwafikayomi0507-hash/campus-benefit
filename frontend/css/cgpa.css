@@ -1,0 +1,202 @@
+/* CGPA CALCULATOR */
+
+:root {
+    --cream: #F9F7F3;
+    --green: #1B6B3A;
+}
+
+.cgpa-page {
+    min-height: 100vh;
+    padding: 40px 6%;
+    background: var(--cream);
+    font-family: 'Figtree', sans-serif;
+}
+
+.back-home {
+    display: inline-block;
+    color: var(--green);
+    font-size: 10px;
+    font-weight: bold;
+    margin-bottom: 35px;
+    text-decoration: none;
+    font-family: 'Figtree', sans-serif;
+}
+
+.cgpa-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.cgpa-heading {
+    text-align: center;
+    margin-bottom: 35px;
+}
+
+.cgpa-heading p {
+    color: var(--green);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1.8px;
+    margin-bottom: 12px;
+}
+
+.cgpa-heading h1 {
+    font-size: 48px;
+    color: rgb(14, 14, 44);
+    margin-bottom: 12px;
+}
+
+.cgpa-heading span {
+    color: #666;
+    font-size: 16px;
+}
+
+.course-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 15px;
+    width: 100%;
+    align-items: center;
+}
+
+.remove-course {
+    padding: 0;
+    width: 80px;
+    height: 42px;
+    font-size: 15px;
+    border-radius: 6px;
+    background: transparent;
+    color: #ff6b6b;
+    border: 1px solid #ff6b6b;
+    cursor: pointer;
+}
+
+.remove-course:hover{
+    background: #ff6b6b;
+    color: white;
+}
+
+.course-row select {
+    width: 120px;
+    flex-shrink: 0;
+}
+
+.course-row input,
+.course-row select {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 13px 14px;
+    border: 1px solid #dfe5e1;
+    border-radius: 8px;
+    font-family: 'Figtree', sans-serif;
+    font-size: 14px;
+    outline: none;
+}
+
+.course-row input:focus,
+.course-row select:focus {
+    border-color: var(--green);
+}
+
+.course-row + .course-row {
+    margin-top: 15px;
+}
+
+.add-course {
+    border: none;
+    background: #EAF6F1;
+    color: var(--green);
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    margin: 25px 10px 25px 0;
+}
+
+.add-course,
+.remove-course {
+    display: inline-block;
+}
+
+.calculate-cgpa {
+    width: 100%;
+    border: none;
+    background: var(--green);
+    color: white;
+    padding: 14px;
+    border-radius: 8px;
+    font-family: 'Figtree', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.calculate-cgpa:hover {
+    transform: translateY(-2px);
+}
+
+.calculate-cgpa {
+    width: 100%;
+    padding: 14px;
+    margin-top: 20px;
+    border: none;
+    border-radius: 8px;
+    background: var(--green);
+    color: white;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+
+.cgpa-result p {
+    color: #555;
+    font-size: 14px;
+    text-align: center;
+}
+
+.cgpa-result h2 {
+    color: var(--green);
+    font-size: 42px;
+    text-align: center;
+}
+
+
+@media (max-width: 600px) {
+    .cgpa-page {
+        padding: 30px 5%;
+    }
+
+    .cgpa-heading h1 {
+        font-size: 36px;
+    }
+
+    .cgpa-heading span {
+        font-size: 14px;
+    }
+
+    .cgpa-card {
+        padding: 20px;
+    }
+
+    .course-row {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .course-row input[type="text"],
+    .course-row input[type="number"],
+    .course-row select {
+        width: 100%;
+    }
+
+    .add-course,
+    .remove-course {
+        margin: 15px;
+    }
+}
