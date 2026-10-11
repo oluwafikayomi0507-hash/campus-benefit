@@ -1,12 +1,22 @@
 function toggleMenu() {
-    document.querySelector("nav ul").classList.toggle("show-menu");
+    const menu = document.getElementById("primary-navigation");
+    const toggle = document.querySelector(".menu-toggle");
+    const isOpen = menu.classList.toggle("show-menu");
+    toggle.setAttribute("aria-expanded", String(isOpen));
+    toggle.setAttribute("aria-label", isOpen ? "Close navigation menu" : "Open navigation menu");
 }
+
+document.querySelector(".menu-toggle")?.addEventListener("click", toggleMenu);
 
 const navLinks = document.querySelectorAll("nav ul a");
 
 navLinks.forEach(link => {
     link.addEventListener("click", () => {
-        document.querySelector("nav ul").classList.remove("show-menu");
+        const menu = document.getElementById("primary-navigation");
+        const toggle = document.querySelector(".menu-toggle");
+        menu.classList.remove("show-menu");
+        toggle.setAttribute("aria-expanded", "false");
+        toggle.setAttribute("aria-label", "Open navigation menu");
     });
 });
 
