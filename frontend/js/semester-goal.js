@@ -1,7 +1,6 @@
 const addGoalButton = document.querySelector(".add-goal");
 const goalsList = document.querySelector(".goals-list");
 const goalsStatus = document.querySelector("#goals-sync-status");
-const goalsToken = localStorage.getItem("token");
 
 function readLocalGoals() {
   try {
@@ -28,7 +27,7 @@ function saveGoals() {
   goalsSaveQueue = goalsSaveQueue.then(async () => {
     const response = await fetch("/api/student-tools/semester-goals", {
       method: "PUT",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${goalsToken}` },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ data: JSON.parse(snapshot) }),
     });
     const result = await response.json();
@@ -115,7 +114,7 @@ async function loadGoals() {
   addGoalButton.disabled = true;
   setGoalsStatus("Loading your goals...");
   try {
-    const response = await fetch("/api/student-tools/semester-goals", { headers: { Authorization: `Bearer ${goalsToken}` } });
+    const response = await fetch("/api/student-tools/semester-goals");
     const result = await response.json();
     if (!response.ok) throw new Error(result.message || "Could not load your goals.");
     if (Array.isArray(result.data)) {
@@ -137,5 +136,4 @@ async function loadGoals() {
 }
 
 displayGoals();
-if (goalsToken) loadGoals();
-else setGoalsStatus("Sign in to save your goals to your account.");
+loadGoals();

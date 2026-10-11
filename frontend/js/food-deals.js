@@ -3,22 +3,8 @@ const foodDealsGrid = document.querySelector("#food-deals-grid");
 async function loadFoodDeals() {
   if (!foodDealsGrid) return;
 
-  const token = localStorage.getItem("token");
-
-  if (!token) {
-    window.location.replace("login.html");
-    return;
-  }
-
   try {
-    const response = await fetch(
-      "/api/deals?category=food",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const response = await fetch("/api/deals?category=food");
 
     if (response.status === 401) {
       localStorage.removeItem("token");

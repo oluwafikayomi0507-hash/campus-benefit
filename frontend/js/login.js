@@ -26,7 +26,7 @@ if (loginForm) {
         throw new Error(result.message || "Could not log in.");
       }
 
-      localStorage.setItem("token", result.token);
+      localStorage.removeItem("token");
 
       if (result.user) {
         localStorage.setItem("user", JSON.stringify(result.user));

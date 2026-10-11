@@ -3,9 +3,12 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const pool = require("../config/db");
 const requireAuth = require("../middlewares/auth.middleware");
+const createRateLimiter = require("../middlewares/rate-limit.middleware");
 
 const router = express.Router();
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const limitVendorSignup = createRateLimiter({ windowMs: 60 * 60 * 1000, limit: 5, message: "Too many business application attempts. Please try again later." });
+const limitVendorLogin = createRateLimiter({ windowMs: 15 * 60 * 1000, limit: 10, message: "Too many login attempts. Please wait 15 minutes and try again." });
 const clean = (value) => typeof value === "string" ? value.trim() : "";
 
 function requireVendor(req, res, next) {
@@ -24,7 +27,12 @@ async function getApprovedVendor(vendorId) {
   return result.rows[0] || null;
 }
 
-router.post("/auth/signup", async (req, res) => {
+function setVendorSession(res, token) {
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  res.setHeader("Set-Cookie", `cb_vendor_session=${token}; HttpOnly${secure}; SameSite=Lax; Path=/; Max-Age=3600`);
+}
+
+router.post("/auth/signup", limitVendorSignup, async (req, res) => {
   const body = req.body ?? {};
   const businessName = clean(body.businessName);
   const businessType = clean(body.businessType);
@@ -76,7 +84,7 @@ router.post("/auth/signup", async (req, res) => {
   }
 });
 
-router.post("/auth/login", async (req, res) => {
+router.post("/auth/login", limitVendorLogin, async (req, res) => {
   const email = clean(req.body?.email).toLowerCase();
   const password = typeof req.body?.password === "string" ? req.body.password : "";
   if (!email || !password) {
@@ -107,15 +115,21 @@ router.post("/auth/login", async (req, res) => {
       process.env.JWT_SECRET,
       { algorithm: "HS256", expiresIn: "1h" }
     );
+    setVendorSession(res, token);
     return res.json({
       message: "Vendor login successful.",
-      token,
       vendor: { id: vendor.id, businessName: vendor.business_name, email: vendor.email },
     });
   } catch (error) {
     console.error("Vendor login failed:", error.message);
     return res.status(500).json({ message: "Could not log in." });
   }
+});
+
+router.post("/auth/logout", (req, res) => {
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  res.setHeader("Set-Cookie", `cb_vendor_session=; HttpOnly${secure}; SameSite=Lax; Path=/; Max-Age=0`);
+  return res.json({ message: "Logged out." });
 });
 
 router.get("/me", requireAuth, requireVendor, async (req, res) => {

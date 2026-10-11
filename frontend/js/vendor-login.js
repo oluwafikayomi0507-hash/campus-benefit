@@ -16,7 +16,7 @@ form?.addEventListener("submit", async (event) => {
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.message || "Could not sign in.");
-    localStorage.setItem("vendorToken", result.token);
+    localStorage.removeItem("vendorToken");
     localStorage.setItem("vendor", JSON.stringify(result.vendor));
     window.location.replace("vendor-dashboard.html");
   } catch (error) {

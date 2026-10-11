@@ -1,4 +1,3 @@
-const token = localStorage.getItem("token");
 const productsGrid = document.querySelector("#vendor-products-grid");
 const productsMessage = document.querySelector("#products-message");
 const cartItemsElement = document.querySelector("#cart-items");
@@ -26,8 +25,6 @@ const categoryNames = {
 };
 const selectedCategory = new URLSearchParams(window.location.search).get("category")?.trim().toLowerCase() || "";
 
-if (!token) window.location.replace("login.html");
-
 function readCart() {
   try {
     const value = JSON.parse(localStorage.getItem(cartStorageKey) || "[]");
@@ -45,10 +42,7 @@ function saveCart() {
 }
 
 async function apiRequest(url, options = {}) {
-  const response = await fetch(url, {
-    ...options,
-    headers: { ...(options.headers || {}), Authorization: `Bearer ${token}` },
-  });
+  const response = await fetch(url, options);
   const result = await response.json();
   if (response.status === 401) {
     localStorage.removeItem("token");
@@ -292,7 +286,5 @@ document.querySelector("#checkout-form")?.addEventListener("submit", async (even
 
 document.querySelector("#refresh-orders")?.addEventListener("click", loadStudentOrders);
 renderCart();
-if (token) {
-  loadProducts();
-  loadStudentOrders();
-}
+loadProducts();
+loadStudentOrders();

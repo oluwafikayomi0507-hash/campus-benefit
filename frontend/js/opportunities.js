@@ -2,14 +2,13 @@
   const container = document.querySelector("[data-opportunity-category]");
   if (!container) return;
   const category = container.dataset.opportunityCategory;
-  const token = localStorage.getItem("token");
   const styles = {
     internship: { card: "internship-card", icon: "internship-icon", details: "internship-details", link: "internship-link", emoji: "💼", action: "View Opportunity" },
     competition: { card: "competition-card", icon: "competition-icon", details: "competition-details", link: "competition-link", emoji: "🏆", action: "View Competition" },
     gig: { card: "freelance-card", icon: "freelance-icon", details: "freelance-details", link: "freelance-link", emoji: "✨", action: "View Opportunity" },
     career: { card: "program-card", icon: "program-icon", details: "program-details", link: "program-link", emoji: "🎓", action: "Explore Program" },
   }[category];
-  if (!styles || !token) return;
+  if (!styles) return;
 
   const make = (tag, value, className) => {
     const element = document.createElement(tag);
@@ -41,9 +40,7 @@
     }
   }
 
-  fetch(`/api/opportunities?category=${encodeURIComponent(category)}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
+  fetch(`/api/opportunities?category=${encodeURIComponent(category)}`)
     .then(async (response) => {
       const result = await response.json();
       if (!response.ok) throw new Error(result.message || "Could not load opportunities.");

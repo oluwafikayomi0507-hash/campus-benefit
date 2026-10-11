@@ -1,20 +1,11 @@
-const token = localStorage.getItem("token");
 const studentInfo = document.querySelector("#student-info");
 const logoutButton = document.querySelector("#logout-button");
 
-if (!token) {
-  window.location.replace("login.html");
-} else {
-  loadStudentProfile();
-}
+loadStudentProfile();
 
 async function loadStudentProfile() {
   try {
-    const response = await fetch("/api/auth/me", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await fetch("/api/auth/me");
 
     if (response.status === 401) {
       localStorage.removeItem("token");
@@ -39,7 +30,8 @@ async function loadStudentProfile() {
 }
 
 if (logoutButton) {
-  logoutButton.addEventListener("click", () => {
+  logoutButton.addEventListener("click", async () => {
+    try { await fetch("/api/auth/logout", { method: "POST" }); } catch {}
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     window.location.href = "login.html";

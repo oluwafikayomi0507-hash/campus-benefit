@@ -2,7 +2,6 @@ const addStudyButton = document.querySelector(".add-study");
 const calendar = document.querySelector(".calendar");
 const clearScheduleButton = document.querySelector(".clear-schedule");
 const plannerStatus = document.querySelector("#planner-sync-status");
-const plannerToken = localStorage.getItem("token");
 
 function readLocalSessions() {
   try {
@@ -29,7 +28,7 @@ function saveSessions() {
   saveQueue = saveQueue.then(async () => {
     const response = await fetch("/api/student-tools/planner", {
       method: "PUT",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${plannerToken}` },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ data: JSON.parse(snapshot) }),
     });
     const result = await response.json();
@@ -105,7 +104,7 @@ async function loadSessions() {
   clearScheduleButton.disabled = true;
   setPlannerStatus("Loading your schedule...");
   try {
-    const response = await fetch("/api/student-tools/planner", { headers: { Authorization: `Bearer ${plannerToken}` } });
+    const response = await fetch("/api/student-tools/planner");
     const result = await response.json();
     if (!response.ok) throw new Error(result.message || "Could not load your schedule.");
     if (Array.isArray(result.data)) {
@@ -127,5 +126,4 @@ async function loadSessions() {
   }
 }
 
-if (plannerToken) loadSessions();
-else setPlannerStatus("Sign in to save your schedule to your account.");
+loadSessions();

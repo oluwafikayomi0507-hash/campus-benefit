@@ -149,11 +149,10 @@ if (aiChatForm && aiChatInput && aiChatBody) {
 
         userMessage.className = "ai-user-message";
 
-        userMessage.innerHTML = `
-            <div class="ai-user-message-content">
-                ${message}
-            </div>
-        `;
+        const userMessageContent = document.createElement("div");
+        userMessageContent.className = "ai-user-message-content";
+        userMessageContent.textContent = message;
+        userMessage.appendChild(userMessageContent);
 
         aiChatBody.appendChild(userMessage);
 
@@ -355,11 +354,6 @@ if (helpForm && helpSuccess) {
         event.stopPropagation();
 
         const submitButton = helpForm.querySelector("button[type='submit']");
-        const token = localStorage.getItem("token");
-        if (!token) {
-            window.location.replace("login.html");
-            return;
-        }
 
         submitButton.disabled = true;
         helpSuccess.textContent = "Sending your message...";
@@ -368,10 +362,7 @@ if (helpForm && helpSuccess) {
         try {
             const response = await fetch("/api/support/messages", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     type: document.getElementById("helpType").value,
                     message: document.getElementById("helpMessage").value.trim(),

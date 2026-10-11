@@ -1,16 +1,10 @@
-const token = localStorage.getItem("token");
 const message = document.querySelector("#admin-message");
 const applicationsElement = document.querySelector("#vendor-applications");
 const supportMessagesElement = document.querySelector("#support-messages");
 const supportAdminStatus = document.querySelector("#support-admin-status");
 
-if (!token) window.location.replace("login.html");
-
 async function adminRequest(url, options = {}) {
-  const response = await fetch(url, {
-    ...options,
-    headers: { ...(options.headers || {}), Authorization: `Bearer ${token}` },
-  });
+  const response = await fetch(url, options);
   const result = await response.json();
   if (response.status === 401) {
     localStorage.removeItem("token");
@@ -164,14 +158,13 @@ async function loadSupportMessages() {
 
 document.querySelector("#refresh-applications")?.addEventListener("click", loadApplications);
 document.querySelector("#refresh-support")?.addEventListener("click", loadSupportMessages);
-document.querySelector("#admin-logout")?.addEventListener("click", () => {
+document.querySelector("#admin-logout")?.addEventListener("click", async () => {
+  try { await fetch("/api/auth/logout", { method: "POST" }); } catch {}
   localStorage.removeItem("token");
   localStorage.removeItem("user");
   window.location.replace("login.html");
 });
 
-if (token) {
-  loadApplications();
-  loadSupportMessages();
-}
+loadApplications();
+loadSupportMessages();
 

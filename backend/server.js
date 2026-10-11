@@ -4,7 +4,6 @@ require("dotenv").config({ path: path.join(__dirname, ".env") });
 
 const express = require("express");
 const helmet = require("helmet");
-const cors = require("cors");
 const requireAuth = require("./src/middlewares/auth.middleware");
 const pool = require("./src/config/db");
 const authRoutes = require("./src/routes/auth.routes");
@@ -19,8 +18,25 @@ const { getKeyMode } = require("./src/services/paystack.service");
 
 const app = express();
 
+// Render runs the app behind one trusted proxy; use its client IP for rate limits.
+app.set("trust proxy", 1);
 app.use(helmet());
-app.use(cors());
+app.use("/api", (req, res, next) => {
+  const origin = req.get("origin");
+  if (origin) {
+    try {
+      const parsedOrigin = new URL(origin);
+      const forwardedProto = req.get("x-forwarded-proto")?.split(",")[0].trim();
+      const requestProtocol = forwardedProto || req.protocol;
+      if (parsedOrigin.host !== req.get("host") || parsedOrigin.protocol !== `${requestProtocol}:`) {
+        return res.status(403).json({ message: "This request origin is not allowed." });
+      }
+    } catch {
+      return res.status(403).json({ message: "This request origin is not allowed." });
+    }
+  }
+  return next();
+});
 app.use(express.json({
   limit: "100kb",
   verify: (req, res, buffer) => {

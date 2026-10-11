@@ -1,6 +1,3 @@
-const token = localStorage.getItem("vendorToken");
-if (!token) window.location.replace("vendor-login.html");
-
 const welcome = document.querySelector("#vendor-welcome");
 const productForm = document.querySelector("#product-form");
 const productMessage = document.querySelector("#product-message");
@@ -15,13 +12,7 @@ const listingsContainer = document.querySelector("#vendor-listings");
 let currentVendor = null;
 
 async function vendorFetch(url, options = {}) {
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...(options.headers || {}),
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  const response = await fetch(url, options);
   const result = await response.json();
   if (response.status === 401) {
     localStorage.removeItem("vendorToken");
@@ -294,14 +285,14 @@ deliveryFeeForm?.addEventListener("submit", async (event) => {
     deliveryFeeMessage.textContent = error.message;
   }
 });
-document.querySelector("#vendor-logout")?.addEventListener("click", () => {
+document.querySelector("#vendor-logout")?.addEventListener("click", async () => {
+  try { await fetch("/api/vendor/auth/logout", { method: "POST" }); } catch {}
   localStorage.removeItem("vendorToken");
   localStorage.removeItem("vendor");
   window.location.replace("vendor-login.html");
 });
 
 (async function startDashboard() {
-  if (!token) return;
   try {
     const result = await vendorFetch("/api/vendor/me");
     currentVendor = result.vendor;

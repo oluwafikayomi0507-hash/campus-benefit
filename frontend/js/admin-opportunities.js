@@ -1,15 +1,11 @@
 (() => {
-  const token = localStorage.getItem("token");
   const form = document.querySelector("#opportunity-form");
   const list = document.querySelector("#admin-opportunities");
   const status = document.querySelector("#opportunity-admin-status");
-  if (!form || !list || !status || !token) return;
+  if (!form || !list || !status) return;
 
   async function request(url, options = {}) {
-    const response = await fetch(url, {
-      ...options,
-      headers: { ...(options.headers || {}), Authorization: `Bearer ${token}` },
-    });
+    const response = await fetch(url, options);
     const result = await response.json();
     if (!response.ok) throw new Error(result.message || "Could not complete that action.");
     return result;

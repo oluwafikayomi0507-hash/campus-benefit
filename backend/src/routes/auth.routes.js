@@ -4,25 +4,15 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const pool = require("../config/db");
 const requireAuth = require("../middlewares/auth.middleware");
+const createRateLimiter = require("../middlewares/rate-limit.middleware");
 
 const router = express.Router();
 const allowedLevels = new Set(["100", "200", "300", "400", "500", "600"]);
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const resetRequestTimes = new Map();
-
-function allowResetRequest(ip) {
-  const now = Date.now();
-  const recent = (resetRequestTimes.get(ip) || []).filter((time) => now - time < 15 * 60 * 1000);
-  if (recent.length >= 5) return false;
-  recent.push(now);
-  resetRequestTimes.set(ip, recent);
-  if (resetRequestTimes.size > 5000) {
-    for (const [address, times] of resetRequestTimes) {
-      if (!times.some((time) => now - time < 15 * 60 * 1000)) resetRequestTimes.delete(address);
-    }
-  }
-  return true;
-}
+const limitSignup = createRateLimiter({ windowMs: 60 * 60 * 1000, limit: 10, message: "Too many sign-up attempts. Please try again later." });
+const limitLogin = createRateLimiter({ windowMs: 15 * 60 * 1000, limit: 10, message: "Too many login attempts. Please wait 15 minutes and try again." });
+const limitPasswordReset = createRateLimiter({ windowMs: 15 * 60 * 1000, limit: 5, message: "Too many reset requests. Please wait 15 minutes and try again." });
+const limitPasswordResetSubmit = createRateLimiter({ windowMs: 15 * 60 * 1000, limit: 10, message: "Too many password reset attempts. Please wait and try again." });
 
 function cleanText(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -40,7 +30,12 @@ function createToken(user) {
   );
 }
 
-router.post("/signup", async (req, res) => {
+function setStudentSession(res, token) {
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  res.setHeader("Set-Cookie", `cb_student_session=${token}; HttpOnly${secure}; SameSite=Lax; Path=/; Max-Age=3600`);
+}
+
+router.post("/signup", limitSignup, async (req, res) => {
   const body = req.body ?? {};
   const fullName = cleanText(body.fullName);
   const email = cleanText(body.email).toLowerCase();
@@ -86,11 +81,9 @@ router.post("/signup", async (req, res) => {
     );
 
     const user = result.rows[0];
-    const token = createToken(user);
 
     res.status(201).json({
       message: "Account created successfully.",
-      token,
       user: {
         id: user.id,
         fullName: user.full_name,
@@ -105,7 +98,7 @@ router.post("/signup", async (req, res) => {
   }
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", limitLogin, async (req, res) => {
   const body = req.body ?? {};
   const email = cleanText(body.email).toLowerCase();
   const password = typeof body.password === "string" ? body.password : "";
@@ -129,10 +122,10 @@ router.post("/login", async (req, res) => {
     }
 
     const token = createToken(user);
+    setStudentSession(res, token);
 
     res.json({
       message: "Login successful.",
-      token,
       user: {
         id: user.id,
         fullName: user.full_name,
@@ -147,10 +140,15 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.post("/forgot-password", async (req, res) => {
+router.post("/logout", (req, res) => {
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  res.setHeader("Set-Cookie", `cb_student_session=; HttpOnly${secure}; SameSite=Lax; Path=/; Max-Age=0`);
+  return res.json({ message: "Logged out." });
+});
+
+router.post("/forgot-password", limitPasswordReset, async (req, res) => {
   const email = cleanText(req.body?.email).toLowerCase();
   if (!emailPattern.test(email)) return res.status(400).json({ message: "Enter a valid email address." });
-  if (!allowResetRequest(req.ip || "unknown")) return res.status(429).json({ message: "Too many reset requests. Please wait 15 minutes and try again." });
   const genericMessage = "If an account uses that email and password reset is enabled, a reset link will be sent shortly.";
 
   try {
@@ -211,7 +209,7 @@ router.post("/forgot-password", async (req, res) => {
   }
 });
 
-router.post("/reset-password", async (req, res) => {
+router.post("/reset-password", limitPasswordResetSubmit, async (req, res) => {
   const token = cleanText(req.body?.token);
   const password = typeof req.body?.password === "string" ? req.body.password : "";
   if (!/^[a-f\d]{64}$/i.test(token)) return res.status(400).json({ message: "This reset link is invalid or expired. Request a new one." });

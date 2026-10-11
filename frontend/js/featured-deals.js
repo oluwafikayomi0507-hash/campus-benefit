@@ -10,20 +10,12 @@ async function loadFeaturedDeals() {
   const feed = document.querySelector(".featured-deals-feed");
   if (!feed) return;
 
-  const token = localStorage.getItem("token");
-  if (!token) {
-    window.location.replace("login.html");
-    return;
-  }
-
   const category = feed.dataset.category;
   const status = feed.querySelector(".featured-deals-status");
   const grid = feed.querySelector(".featured-deals-grid");
 
   try {
-    const response = await fetch(`/api/deals?category=${encodeURIComponent(category)}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await fetch(`/api/deals?category=${encodeURIComponent(category)}`);
     const deals = await response.json();
 
     if (response.status === 401) {

@@ -1,17 +1,9 @@
 const dealCountLabels = document.querySelectorAll("[data-deal-count]");
-const studentToken = localStorage.getItem("token");
 
 async function loadDealCounts() {
   if (!dealCountLabels.length) return;
-  if (!studentToken) {
-    window.location.replace("login.html");
-    return;
-  }
-
   try {
-    const response = await fetch("/api/deals/summary", {
-      headers: { Authorization: `Bearer ${studentToken}` },
-    });
+    const response = await fetch("/api/deals/summary");
     const counts = await response.json();
     if (response.status === 401) {
       localStorage.removeItem("token");

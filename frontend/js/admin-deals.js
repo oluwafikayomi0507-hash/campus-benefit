@@ -1,14 +1,10 @@
 (() => {
-  const token = localStorage.getItem("token");
   const list = document.querySelector("#admin-deals");
   const status = document.querySelector("#admin-deals-status");
-  if (!token || !list || !status) return;
+  if (!list || !status) return;
 
   async function request(url, options = {}) {
-    const response = await fetch(url, {
-      ...options,
-      headers: { ...(options.headers || {}), Authorization: `Bearer ${token}` },
-    });
+    const response = await fetch(url, options);
     const result = await response.json();
     if (!response.ok) throw new Error(result.message || "Could not complete that action.");
     return result;

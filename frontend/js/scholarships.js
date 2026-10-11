@@ -3,18 +3,8 @@ const scholarshipGrid = document.querySelector(".scholarships-grid");
 async function loadScholarships() {
   if (!scholarshipGrid) return;
 
-  const token = localStorage.getItem("token");
-  if (!token) {
-    window.location.replace("login.html");
-    return;
-  }
-
   try {
-    const response = await fetch("/api/scholarships", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await fetch("/api/scholarships");
 
     if (response.status === 401) {
       localStorage.removeItem("token");

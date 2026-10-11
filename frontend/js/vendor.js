@@ -25,12 +25,6 @@ if (vendorForm) {
       return;
     }
 
-    const token = localStorage.getItem("token");
-    if (!token) {
-      window.location.replace("login.html");
-      return;
-    }
-
     const submitButton = vendorForm.querySelector(".vendor-submit");
     submitButton.disabled = true;
     submitButton.textContent = "Submitting...";
@@ -40,10 +34,7 @@ if (vendorForm) {
         "/api/vendor-submissions",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(submission),
         }
       );

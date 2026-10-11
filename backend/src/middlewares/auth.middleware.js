@@ -1,10 +1,16 @@
 const jwt = require("jsonwebtoken");
 
 function requireAuth(req, res, next) {
-  const authorization = req.get("authorization") || "";
-  const [scheme, token] = authorization.split(" ");
+  const cookieName = req.originalUrl.startsWith("/api/vendor/")
+    ? "cb_vendor_session"
+    : "cb_student_session";
+  const cookies = Object.fromEntries((req.get("cookie") || "").split(";").map((part) => {
+    const separator = part.indexOf("=");
+    return separator < 0 ? ["", ""] : [part.slice(0, separator).trim(), part.slice(separator + 1).trim()];
+  }));
+  const token = cookies[cookieName];
 
-  if (scheme !== "Bearer" || !token) {
+  if (!token) {
     return res.status(401).json({ message: "Please log in to continue." });
   }
 
@@ -18,11 +24,12 @@ function requireAuth(req, res, next) {
       algorithms: ["HS256"],
     });
 
-    if (!payload.sub) {
+    const expectedRole = cookieName === "cb_vendor_session" ? "vendor" : "student";
+    if (!payload.sub || payload.role !== expectedRole) {
       return res.status(401).json({ message: "Please log in again." });
     }
 
-    req.user = { id: payload.sub, role: payload.role || "student" };
+    req.user = { id: payload.sub, role: payload.role };
     return next();
   } catch {
     return res.status(401).json({
