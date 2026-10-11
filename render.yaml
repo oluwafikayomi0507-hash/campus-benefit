@@ -14,4 +14,6 @@ services:
       - key: DATABASE_URL
         sync: false
       - key: APP_BASE_URL
-        value: https://campusbenefit.com.ng
+        value: https://campus-benefit.onrender.com
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
