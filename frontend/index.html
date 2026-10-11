@@ -28,9 +28,10 @@
                 <li><a href="#opportunities">Opportunities</a></li>
                 <li><a href="#deals">Deals</a></li>
                 <li><a href="#marketplace">Marketplace</a></li>
+                <li><a href="vendor-login.html">Vendor sign in</a></li>
             </ul>
 
-            <a href="#get-started" class="nav-btn">Get Started</a>
+            <a href="login.html" class="nav-btn" id="logout-link">Log Out</a>
 
             <button class="menu-toggle" onclick="toggleMenu()">☰</button>
         </nav>
@@ -294,7 +295,7 @@
                     </div>
 
                     <h3>Food & Drinks</h3>
-                    <span>18 deals</span>
+                    <span data-deal-count="food">Loading deals…</span>
                 </a>
 
 
@@ -304,7 +305,7 @@
                     </div>
 
                     <h3>Fashion</h3>
-                    <span>24 deals</span>
+                    <span data-deal-count="fashion">Loading deals…</span>
                 </a>
 
 
@@ -314,7 +315,7 @@
                     </div>
 
                     <h3>Printing & Services</h3>
-                    <span>8 deals</span>
+                    <span data-deal-count="printing">Loading deals…</span>
                 </a>
 
 
@@ -324,7 +325,7 @@
                     </div>
 
                     <h3>Beauty & Grooming</h3>
-                    <span>12 deals</span>
+                    <span data-deal-count="beauty">Loading deals…</span>
                 </a>
 
 
@@ -334,7 +335,7 @@
                     </div>
 
                     <h3>Tech & Gadgets</h3>
-                    <span>15 deals</span>
+                    <span data-deal-count="tech">Loading deals…</span>
                 </a>
 
             </div>
@@ -352,7 +353,7 @@
                     Support Student Businesses
                 </h2>
 
-                <p>
+                <p class="marketplace-intro">
                     Discover products and services created by students, for students.
                 </p>
 
@@ -362,7 +363,7 @@
             <div class="marketplace-grid">
 
                 <!-- Creative Services -->
-                <a href="creative-services.html" class="marketplace-card">
+                <a href="vendors.html?category=creative" class="marketplace-card">
 
                     <div class="marketplace-image">
                         <img src="img/studio-lights-photographers-guide.jpg" alt="Creative Services">
@@ -393,7 +394,7 @@
 
 
                 <!-- Food & Snacks -->
-                <a href="marketplace-food.html" class="marketplace-card">
+                <a href="vendors.html?category=food" class="marketplace-card">
 
                     <div class="marketplace-image">
                         <img src="img/nigeran jollof.jpg" alt="Food and Snacks">
@@ -424,7 +425,7 @@
 
 
                 <!-- Fashion & Accessories -->
-                <a href="marketplace-fashion.html" class="marketplace-card">
+                <a href="vendors.html?category=fashion" class="marketplace-card">
 
                     <div class="marketplace-image">
                         <img src="img/tailor.jpg" alt="Fashion and Accessories">
@@ -455,7 +456,7 @@
 
 
                 <!-- Beauty & Grooming -->
-                <a href="marketplace-beauty.html" class="marketplace-card">
+                <a href="vendors.html?category=beauty" class="marketplace-card">
 
                     <div class="marketplace-image">
                         <img src="img/beauty.png" alt="Beauty and Grooming">
@@ -636,9 +637,208 @@
 
 
     </main>
-    
-    <script src="js/script.js"></script>
 
+   <!-- Floating Help -->
+    <div class="floating-help-wrapper">
+
+        <button type="button" class="floating-help" id="helpButton">
+            💬 <span>Need Help?</span>
+        </button>
+
+        <div class="help-popup" id="helpPopup">
+
+            <!-- HELP MENU -->
+            <div id="helpMenu">
+
+                <div class="help-popup-header">
+
+                    <div>
+                        <h3>How can we help?</h3>
+                        <p>Choose what you need help with.</p>
+                    </div>
+
+                </div>
+
+                <button type="button" class="help-close" id="helpClose">
+                    ×
+                </button>
+
+            </div>
+
+
+            <div class="help-options">
+
+                <!-- AI ASSISTANT -->
+                <button type="button" class="help-option" id="aiHelpOption">
+
+                    <div class="help-option-icon">
+                        🤖
+                    </div>
+
+                    <div>
+                        <h4>Ask Campus Benefit</h4>
+                        <p>Get quick answers and student guidance.</p>
+                    </div>
+
+                    <span class="help-option-arrow">→</span>
+
+                </button>
+
+
+                <!-- SUPPORT -->
+                <button type="button" class="help-option" id="supportHelpOption">
+
+                    <div class="help-option-icon">
+                        🛠️
+                    </div>
+
+                    <div>
+                        <h4>Contact Support</h4>
+                        <p>Report a problem, suggest an idea or send a complaint.</p>
+                    </div>
+
+                    <span class="help-option-arrow">→</span>
+
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- AI CHAT -->
+        <div class="ai-help-section" id="aiHelpSection">
+
+            <div class="ai-help-top">
+
+                <button type="button" class="back-help" id="backFromAi">
+                    ←
+                </button>
+
+                <div>
+                    <h3>Ask Campus Benefit</h3>
+                    <p>Your student assistant</p>
+                </div>
+
+            </div>
+
+
+            <div class="ai-chat-body">
+
+                <div class="ai-message">
+
+                    <span class="ai-avatar">🤖</span>
+
+                    <div class="ai-message-content">
+                        Hi! 👋 I'm your Campus Benefit assistant.
+                        What would you like to know?
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <form class="ai-chat-form" id="aiChatForm">
+
+                <input
+                    type="text"
+                    id="aiChatInput"
+                    placeholder="Ask something..."
+                    autocomplete="off"
+                    required
+                >
+
+                <button type="submit">
+                    ➤
+                </button>
+
+            </form>
+
+        </div>
+
+
+        <!-- SUPPORT FORM -->
+        <div class="support-help-section" id="supportHelpSection">
+
+            <div class="ai-help-top">
+
+                <button type="button" class="back-help" id="backFromSupport">
+                    ←
+                </button>
+
+                <div>
+                    <h3>Contact Support</h3>
+                    <p>We're here to help.</p>
+                </div>
+
+            </div>
+
+
+            <form id="helpForm">
+
+                <label for="helpType">
+                    What can we help with?
+                </label>
+
+                <select id="helpType" required>
+
+                    <option value="">
+                        Select an option
+                    </option>
+
+                    <option value="question">
+                        I have a question
+                    </option>
+
+                    <option value="problem">
+                        Report a problem
+                    </option>
+
+                    <option value="suggestion">
+                        Make a suggestion
+                    </option>
+
+                    <option value="complaint">
+                        Make a complaint
+                    </option>
+
+                </select>
+
+
+                <label for="helpMessage">
+                    Your message
+                </label>
+
+                <textarea
+                    id="helpMessage"
+                    placeholder="Tell us what happened..."
+                    required
+                ></textarea>
+
+
+                <button
+                    type="submit"
+                    class="help-submit"
+                >
+                    Send Message
+                </button>
+
+            </form>
+
+
+            <p class="help-success" id="helpSuccess">
+                Thanks! Your message has been received.
+            </p>
+
+        </div>
+
+    </div>
+
+    <script src="js/script.js"></script>
+    <script src="js/deals-summary.js"></script>
+    <script src="js/logout.js"></script>
+    <script src="js/auth-guard.js"></script>
 </body>
 
 </html>

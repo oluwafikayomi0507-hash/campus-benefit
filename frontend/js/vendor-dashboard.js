@@ -1,0 +1,337 @@
+const token = localStorage.getItem("vendorToken");
+if (!token) window.location.replace("vendor-login.html");
+
+const welcome = document.querySelector("#vendor-welcome");
+const productForm = document.querySelector("#product-form");
+const productMessage = document.querySelector("#product-message");
+const deliveryFeeForm = document.querySelector("#delivery-fee-form");
+const deliveryFeeMessage = document.querySelector("#delivery-fee-message");
+const productsContainer = document.querySelector("#vendor-products");
+const ordersContainer = document.querySelector("#vendor-orders");
+const listingForm = document.querySelector("#listing-form");
+const listingMessage = document.querySelector("#listing-message");
+const listingPackageSelect = document.querySelector("#listing-package");
+const listingsContainer = document.querySelector("#vendor-listings");
+let currentVendor = null;
+
+async function vendorFetch(url, options = {}) {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const result = await response.json();
+  if (response.status === 401) {
+    localStorage.removeItem("vendorToken");
+    localStorage.removeItem("vendor");
+    window.location.replace("vendor-login.html");
+    throw new Error("Please sign in again.");
+  }
+  if (!response.ok) throw new Error(result.message || "Request failed.");
+  return result;
+}
+
+function showEmpty(container, text) {
+  container.textContent = text;
+}
+
+async function loadProducts() {
+  const mine = await vendorFetch("/api/vendor/products");
+  productsContainer.replaceChildren();
+  if (!mine.length) return showEmpty(productsContainer, "You have not added any products yet.");
+
+  for (const product of mine) {
+    const card = document.createElement("article");
+    card.className = "dashboard-item";
+    const name = document.createElement("h3");
+    name.textContent = `${product.product_name}${product.is_available ? "" : " · Hidden"}`;
+    const price = document.createElement("p");
+    price.textContent = `₦${Number(product.price).toLocaleString()}`;
+    const category = document.createElement("p");
+    category.textContent = `Section: ${product.category}`;
+    card.append(name, category, price);
+    if (product.description) {
+      const description = document.createElement("p");
+      description.textContent = product.description;
+      card.appendChild(description);
+    }
+    const visibility = document.createElement("button");
+    visibility.type = "button";
+    visibility.className = "small-action";
+    visibility.textContent = product.is_available ? "Hide product" : "Show product";
+    visibility.addEventListener("click", async () => {
+      visibility.disabled = true;
+      try {
+        await vendorFetch(`/api/vendor/products/${product.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isAvailable: !product.is_available }),
+        });
+        await loadProducts();
+      } catch (error) {
+        window.alert(error.message);
+        visibility.disabled = false;
+      }
+    });
+    card.appendChild(visibility);
+    productsContainer.appendChild(card);
+  }
+}
+
+function statusButton(label, status, orderId) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "small-action";
+  button.textContent = label;
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    try {
+      await vendorFetch(`/api/vendor/orders/${orderId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      await loadOrders();
+    } catch (error) {
+      window.alert(error.message);
+      button.disabled = false;
+    }
+  });
+  return button;
+}
+
+async function loadOrders() {
+  const orders = await vendorFetch("/api/vendor/orders");
+  ordersContainer.replaceChildren();
+  if (!orders.length) return showEmpty(ordersContainer, "New orders will appear here.");
+
+  for (const order of orders) {
+    const card = document.createElement("article");
+    card.className = "dashboard-item";
+    const heading = document.createElement("h3");
+    heading.textContent = `Order #${order.id} · ${order.status}`;
+    const student = document.createElement("p");
+    student.textContent = `From: ${order.student_name} (${order.student_email})`;
+    card.append(heading, student);
+    const total = document.createElement("p");
+    total.textContent = `Total: ₦${Number(order.total_amount).toLocaleString()} · ${order.delivery_method}`;
+    card.appendChild(total);
+    if (order.customer_phone) {
+      const phone = document.createElement("p");
+      phone.textContent = `Phone: ${order.customer_phone}`;
+      card.appendChild(phone);
+    }
+    for (const item of order.items) {
+      const line = document.createElement("p");
+      line.textContent = `${item.quantity} × ${item.productName} — ₦${Number(item.unitPrice).toLocaleString()}`;
+      card.appendChild(line);
+    }
+    if (order.delivery_note) {
+      const note = document.createElement("p");
+      note.textContent = `Note: ${order.delivery_note}`;
+      card.appendChild(note);
+    }
+    const actions = document.createElement("div");
+    actions.className = "order-actions";
+    const nextActions = {
+      pending: [["Accept", "accepted"], ["Cancel", "cancelled"]],
+      accepted: [["Preparing", "preparing"], ["Cancel", "cancelled"]],
+      preparing: [["Ready", "ready"], ["Cancel", "cancelled"]],
+      ready: [["Complete", "completed"], ["Cancel", "cancelled"]],
+    };
+    for (const [label, nextStatus] of nextActions[order.status] || []) {
+      actions.appendChild(statusButton(label, nextStatus, order.id));
+    }
+    card.appendChild(actions);
+    ordersContainer.appendChild(card);
+  }
+}
+
+async function loadListingPackages() {
+  if (!listingPackageSelect) return;
+  const result = await vendorFetch("/api/vendor/listing-packages");
+  listingPackageSelect.replaceChildren();
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Choose a listing package";
+  listingPackageSelect.appendChild(placeholder);
+  for (const item of result.packages) {
+    const option = document.createElement("option");
+    option.value = item.package_code;
+    option.textContent = `₦${Number(item.price_naira).toLocaleString()} · ${item.duration_days} days`;
+    listingPackageSelect.appendChild(option);
+  }
+}
+
+function checkoutButton(listing) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "small-action";
+  button.textContent = "Pay and publish";
+  button.addEventListener("click", async () => {
+    listingMessage.textContent = "Preparing secure checkout...";
+    button.disabled = true;
+    button.textContent = "Connecting to Paystack...";
+    try {
+      const result = await vendorFetch(`/api/vendor/listings/${listing.id}/checkout`, { method: "POST" });
+      if (!result.authorizationUrl) {
+        throw new Error(result.message || "Paystack did not return a checkout link.");
+      }
+      window.location.assign(result.authorizationUrl);
+    } catch (error) {
+      listingMessage.textContent = error.message;
+      button.disabled = false;
+      button.textContent = "Pay and publish";
+    }
+  });
+  return button;
+}
+
+async function loadFeaturedListings() {
+  const result = await vendorFetch("/api/vendor/listings");
+  listingsContainer.replaceChildren();
+  if (!result.listings.length) {
+    return showEmpty(listingsContainer, "Your submitted featured listings will appear here.");
+  }
+
+  for (const listing of result.listings) {
+    const card = document.createElement("article");
+    card.className = "dashboard-item";
+    const title = document.createElement("h3");
+    title.textContent = listing.title;
+    const category = document.createElement("p");
+    category.textContent = `Category: ${listing.category}`;
+    const status = document.createElement("p");
+    if (listing.payment_status === "paid" && listing.is_active) {
+      const expiry = listing.expires_at ? new Date(listing.expires_at).toLocaleDateString() : "—";
+      status.textContent = `Active · ${listing.package_name || "Listing"} · ends ${expiry}`;
+    } else {
+      status.textContent = `Not published · ${listing.latest_payment_status === "failed" ? "last payment did not complete" : "payment required"}`;
+    }
+    card.append(title, category, status);
+    if (listing.description) {
+      const description = document.createElement("p");
+      description.textContent = listing.description;
+      card.appendChild(description);
+    }
+    if (!(listing.payment_status === "paid" && listing.is_active)) {
+      card.appendChild(checkoutButton(listing));
+    }
+    listingsContainer.appendChild(card);
+  }
+}
+
+listingForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  listingMessage.textContent = "Saving your listing...";
+  const submit = document.querySelector("#listing-submit");
+  submit.disabled = true;
+  try {
+    const result = await vendorFetch("/api/vendor/listings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: document.querySelector("#listing-title").value.trim(),
+        category: document.querySelector("#listing-category").value,
+        description: document.querySelector("#listing-description").value.trim(),
+        price: document.querySelector("#listing-price").value,
+        discount: document.querySelector("#listing-discount").value.trim(),
+        imageUrl: document.querySelector("#listing-image").value.trim(),
+        offerUrl: document.querySelector("#listing-offer-url").value.trim(),
+        packageCode: listingPackageSelect.value,
+      }),
+    });
+    if (result.authorizationUrl) {
+      window.location.assign(result.authorizationUrl);
+      return;
+    }
+    listingForm.reset();
+    listingMessage.textContent = result.message;
+    await loadFeaturedListings();
+  } catch (error) {
+    listingMessage.textContent = error.message;
+  } finally {
+    submit.disabled = false;
+  }
+});
+
+productForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  productMessage.textContent = "Saving product...";
+  try {
+    await vendorFetch("/api/vendor/products", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        productName: document.querySelector("#product-name").value.trim(),
+        category: document.querySelector("#product-category").value,
+        price: document.querySelector("#product-price").value,
+        description: document.querySelector("#product-description").value.trim(),
+        imageUrl: document.querySelector("#product-image").value.trim(),
+      }),
+    });
+    productForm.reset();
+    productMessage.textContent = "Product added.";
+    await loadProducts();
+  } catch (error) {
+    productMessage.textContent = error.message;
+  }
+});
+
+deliveryFeeForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  deliveryFeeMessage.textContent = "Saving delivery fee...";
+  try {
+    const result = await vendorFetch("/api/vendor/delivery-fee", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ deliveryFee: document.querySelector("#vendor-delivery-fee").value }),
+    });
+    deliveryFeeMessage.textContent = `Delivery fee saved: ₦${Number(result.deliveryFee).toLocaleString()}`;
+  } catch (error) {
+    deliveryFeeMessage.textContent = error.message;
+  }
+});
+document.querySelector("#vendor-logout")?.addEventListener("click", () => {
+  localStorage.removeItem("vendorToken");
+  localStorage.removeItem("vendor");
+  window.location.replace("vendor-login.html");
+});
+
+(async function startDashboard() {
+  if (!token) return;
+  try {
+    const result = await vendorFetch("/api/vendor/me");
+    currentVendor = result.vendor;
+    welcome.textContent = `Welcome, ${currentVendor.business_name}`;
+    document.querySelector("#vendor-delivery-fee").value = Number(currentVendor.delivery_fee || 0);
+    await verifyListingPaymentFromReturn();
+    await Promise.all([loadProducts(), loadOrders(), loadListingPackages(), loadFeaturedListings()]);
+  } catch (error) {
+    showEmpty(ordersContainer, error.message);
+  }
+})();
+
+async function verifyListingPaymentFromReturn() {
+  const url = new URL(window.location.href);
+  const reference = url.searchParams.get("reference");
+  if (!reference || url.searchParams.get("listing_payment") !== "1") return;
+  listingMessage.textContent = "Checking your payment with Paystack...";
+  try {
+    const result = await vendorFetch("/api/vendor/listings/payments/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reference }),
+    });
+    listingMessage.textContent = result.message;
+  } catch (error) {
+    listingMessage.textContent = error.message;
+  } finally {
+    url.searchParams.delete("reference");
+    url.searchParams.delete("listing_payment");
+    window.history.replaceState({}, "", url);
+  }
+}
+

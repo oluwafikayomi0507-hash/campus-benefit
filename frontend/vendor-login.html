@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vendor Sign In | Campus Benefit</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/vendor-portal.css">
+</head>
+<body>
+  <main class="vendor-portal-page">
+    <a class="back-home" href="vendor.html">← Back to vendor information</a>
+    <section class="portal-card">
+      <p class="portal-label">CAMPUS BENEFIT VENDORS</p>
+      <h1>Vendor sign in</h1>
+      <p>Sign in to add products and manage your orders.</p>
+      <form id="vendor-login-form">
+        <label for="vendor-email">Email</label>
+        <input id="vendor-email" name="email" type="email" required autocomplete="email">
+        <label for="vendor-password">Password</label>
+        <input id="vendor-password" name="password" type="password" required autocomplete="current-password">
+        <button type="submit">Sign in</button>
+        <p class="portal-message" id="login-message" role="status"></p>
+      </form>
+      <p class="portal-switch">New vendor? <a href="vendor-signup.html">Create an account</a></p>
+    </section>
+  </main>
+  <script src="js/vendor-login.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: campus-benefit
+    runtime: node
+    plan: free
+    buildCommand: npm --prefix backend ci
+    startCommand: npm --prefix backend start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: APP_BASE_URL
+        value: https://campusbenefit.com.ng

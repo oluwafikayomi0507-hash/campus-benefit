@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit Your Business | Campus Benefit</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/vendor-portal.css">
+  <link rel="stylesheet" href="css/vendor-application.css">
+</head>
+<body>
+  <main class="vendor-portal-page">
+    <a class="back-home" href="vendor.html">← Back to vendor information</a>
+    <section class="portal-card application-card">
+      <p class="portal-label">CAMPUS BENEFIT VENDORS</p>
+      <h1>Submit your business</h1>
+      <p class="application-intro">Tell us about your business. After review and approval, you can sign in to list products, set delivery fees, and receive student orders.</p>
+      <form id="vendor-signup-form" class="application-form">
+        <div class="application-field">
+          <label for="business-name">Business name</label>
+          <input id="business-name" name="businessName" required maxlength="160" autocomplete="organization" placeholder="e.g. Heesha's Perfect Bitez">
+        </div>
+        <div class="application-field">
+          <label for="business-type">What do you sell?</label>
+          <input id="business-type" name="businessType" required placeholder="Cakes, food, clothing...">
+        </div>
+        <div class="application-field">
+          <label for="university">University / campus</label>
+          <input id="university" name="university" required placeholder="e.g. YABATECH">
+        </div>
+        <div class="application-field">
+          <label for="business-location">Business location</label>
+          <input id="business-location" name="location" required placeholder="Campus, area, or delivery area">
+        </div>
+        <div class="application-field">
+          <label for="vendor-email">Business email</label>
+          <input id="vendor-email" name="email" type="email" required autocomplete="email" placeholder="you@example.com">
+        </div>
+        <div class="application-field">
+          <label for="vendor-phone">Phone number</label>
+          <input id="vendor-phone" name="phoneNumber" type="tel" autocomplete="tel" placeholder="Optional if WhatsApp is provided">
+        </div>
+        <div class="application-field">
+          <label for="vendor-whatsapp">WhatsApp number</label>
+          <input id="vendor-whatsapp" name="whatsappNumber" type="tel" placeholder="A phone or WhatsApp number is required">
+        </div>
+        <div class="application-field">
+          <label for="vendor-social">Website or social media link <span>(optional)</span></label>
+          <input id="vendor-social" name="social" type="url" placeholder="https://...">
+        </div>
+        <div class="application-field application-field--full">
+          <label for="business-description">Tell us about your business</label>
+          <textarea id="business-description" name="description" rows="4" placeholder="What do you offer? Where do you serve students?"></textarea>
+        </div>
+        <div class="application-field">
+          <label for="vendor-password">Create a password</label>
+          <input id="vendor-password" name="password" type="password" minlength="8" required autocomplete="new-password" placeholder="At least 8 characters">
+        </div>
+        <div class="application-field">
+          <label for="vendor-confirm-password">Confirm password</label>
+          <input id="vendor-confirm-password" type="password" minlength="8" required autocomplete="new-password" placeholder="Enter it again">
+        </div>
+        <button class="application-submit" type="submit">Submit Your Business</button>
+        <p class="portal-message application-message" id="signup-message" role="status"></p>
+      </form>
+      <p class="portal-switch">Already approved? <a href="vendor-login.html">Vendor sign in</a></p>
+    </section>
+  </main>
+  <script src="js/vendor-signup.js"></script>
+</body>
+</html>

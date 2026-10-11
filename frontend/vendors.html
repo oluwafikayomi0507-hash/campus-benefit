@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Benefit Vendors</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/vendors.css">
+</head>
+<body>
+  <main class="vendors-page">
+    <div class="vendors-topbar">
+      <a class="back-home" href="index.html">← Back to Campus Benefit</a>
+      <a class="cart-jump" href="#order-cart" aria-label="View your order cart" hidden>
+        <span aria-hidden="true">🛒</span> View cart <span id="cart-shortcut-count" class="cart-shortcut-count">0</span>
+        <span id="cart-shortcut-total" class="cart-shortcut-total">₦0</span>
+      </a>
+    </div>
+    <header class="vendors-heading">
+      <p class="vendors-label">CAMPUS BENEFIT MARKETPLACE</p>
+      <h1 id="vendors-page-title">Shop from campus vendors</h1>
+      <p>Browse products, add them to your cart, and send your order to the vendor.</p>
+    </header>
+
+    <div class="vendors-layout">
+      <section class="products-panel">
+        <h2>Vendor collection</h2>
+        <p id="products-message" class="vendors-message" role="status">Loading products...</p>
+        <div id="vendor-products-grid" class="vendor-products-grid"></div>
+      </section>
+
+      <aside class="cart-panel" id="order-cart" hidden>
+        <h2>Your order cart <span id="cart-count">0</span></h2>
+        <div id="cart-items" class="cart-items"></div>
+        <p class="cart-total">Items: <strong id="cart-subtotal">₦0</strong></p>
+        <p class="cart-total">Delivery: <strong id="cart-delivery-fee">₦0</strong></p>
+        <p class="cart-total">Total: <strong id="cart-total">₦0</strong></p>
+        <form id="checkout-form">
+          <label for="customer-phone">Your phone number</label>
+          <input id="customer-phone" type="tel" required placeholder="So the vendor can contact you">
+          <label for="delivery-method">How do you want to receive it?</label>
+          <select id="delivery-method" required>
+            <option value="delivery">Delivery</option>
+            <option value="pickup">Pickup (no delivery fee)</option>
+          </select>
+          <label for="delivery-note">Order note</label>
+          <textarea id="delivery-note" rows="3" placeholder="Pickup or delivery details, size, flavour, etc."></textarea>
+          <button id="place-order" type="submit">Place order</button>
+          <p id="checkout-message" class="vendors-message" role="status"></p>
+        </form>
+        <p class="payment-note">Payment is arranged with the vendor after they receive your order.</p>
+      </aside>
+    </div>
+
+    <section class="student-orders-panel">
+      <div class="orders-heading-row">
+        <h2>My orders</h2>
+        <button id="refresh-orders" class="refresh-button" type="button">Refresh</button>
+      </div>
+      <div id="student-orders" class="student-orders-list"></div>
+    </section>
+  </main>
+  <script src="js/vendors.js"></script>
+  <script src="js/auth-guard.js"></script>
+</body>
+</html>
+
+

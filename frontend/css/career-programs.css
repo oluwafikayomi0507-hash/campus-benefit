@@ -1,0 +1,18 @@
+.career-programs-page { min-height: 100vh; padding: 42px 8%; background: #f8f6f0; color: #15231d; font-family: 'Figtree', Arial, sans-serif; }
+.career-programs-page .back-link { display: inline-block; margin-bottom: 35px; color: #1b6b3a; font-weight: 700; text-decoration: none; }
+.career-programs-heading { max-width: 720px; margin: 0 auto 46px; text-align: center; }
+.career-programs-heading span { color: #1b6b3a; font-size: 12px; font-weight: 800; letter-spacing: 2px; }
+.career-programs-heading h1 { margin: 10px 0; color: #16251f; font-size: clamp(34px, 5vw, 46px); }
+.career-programs-heading p { color: #68736e; line-height: 1.7; }
+.career-programs-section { max-width: 1100px; margin: auto; }
+.career-programs-section h2 { margin-bottom: 20px; }
+.career-programs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+.program-card { display: block; padding: 25px; border: 1px solid #dce8e2; border-radius: 12px; background: #fff; color: inherit; text-decoration: none; }
+.program-card h3 { margin-top: 0; color: #172820; }
+.program-card p { color: #69746f; line-height: 1.7; }
+.program-link { color: #1b6b3a; font-weight: 800; }
+.database-opportunities { display: contents; }
+.program-icon { display: grid; width: 48px; height: 48px; place-items: center; margin-bottom: 18px; border-radius: 9px; background: #eaf6f1; font-size: 22px; }
+.program-details { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+.program-details span { padding: 7px 10px; border-radius: 5px; background: #f1f7f4; color: #1b6b3a; font-size: 11px; font-weight: 700; }
+@media (max-width: 600px) { .career-programs-page { padding: 28px 5%; } }

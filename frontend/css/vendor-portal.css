@@ -1,0 +1,208 @@
+.vendor-portal-page {
+  min-height: 100vh;
+  padding: 32px 6%;
+  background: #f9f7f3;
+  color: #071b3a;
+}
+
+.vendor-portal-page .back-home {
+  position: static;
+  display: inline-block;
+  margin-bottom: 28px;
+}
+
+.portal-card,
+.dashboard-panel {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto 24px;
+  padding: 32px;
+  background: #fff;
+  border: 1px solid #e5e9e6;
+  border-radius: 18px;
+  box-shadow: 0 12px 32px rgba(7, 27, 58, .06);
+}
+
+.portal-card h1,
+.dashboard-welcome h1 {
+  margin: 8px 0 10px;
+  color: #071b3a;
+  font-size: 32px;
+}
+
+.portal-card > p,
+.dashboard-welcome > p {
+  color: #626b65;
+  line-height: 1.6;
+}
+
+.portal-label {
+  color: #1b6b3a !important;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+}
+
+.portal-card form,
+.product-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.portal-card label,
+.product-form label {
+  margin-top: 8px;
+  color: #25364a;
+  font-weight: 600;
+}
+
+.portal-card input,
+.portal-card textarea,
+.product-form input,
+.product-form textarea,
+.product-form select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d5ddd7;
+  border-radius: 8px;
+  font: inherit;
+}
+
+.listing-price-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.listing-price-row > div {
+  display: grid;
+  gap: 10px;
+}
+
+.portal-card button,
+.product-form button,
+.secondary-button {
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 8px;
+  background: #1b6b3a;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.portal-card button:hover,
+.product-form button:hover,
+.secondary-button:hover {
+  background: #14552e;
+}
+
+.portal-message {
+  min-height: 24px;
+  color: #1b6b3a !important;
+}
+
+.portal-switch {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.portal-switch a,
+.vendor-portal-links a {
+  color: #1b6b3a;
+  font-weight: 700;
+}
+
+.dashboard-page {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.dashboard-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 35px;
+}
+
+.dashboard-topbar .back-home {
+  margin: 0;
+}
+
+.dashboard-welcome {
+  margin: 0 auto 28px;
+  text-align: center;
+}
+
+.dashboard-panel {
+  max-width: 900px;
+}
+
+.dashboard-panel h2 {
+  margin-bottom: 16px;
+  color: #1b6b3a;
+}
+
+.dashboard-list {
+  display: grid;
+  gap: 14px;
+}
+
+.dashboard-item {
+  padding: 18px;
+  border: 1px solid #e5e9e6;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.dashboard-item h3 {
+  margin: 0 0 8px;
+  color: #071b3a;
+}
+
+.dashboard-item p {
+  margin: 6px 0;
+  color: #626b65;
+  line-height: 1.5;
+}
+
+.order-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.small-action {
+  padding: 8px 11px;
+  border: 1px solid #1b6b3a;
+  border-radius: 7px;
+  background: #fff;
+  color: #1b6b3a;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.small-action:hover {
+  background: #eaf4ed;
+}
+
+.vendor-portal-links {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin: 18px 0 26px;
+}
+
+@media (max-width: 600px) {
+  .vendor-portal-page { padding: 24px 5%; }
+  .portal-card,
+  .dashboard-panel { padding: 24px 20px; }
+  .portal-card h1,
+  .dashboard-welcome h1 { font-size: 27px; }
+  .dashboard-topbar { margin-bottom: 28px; }
+  .vendor-portal-links { flex-direction: column; align-items: center; gap: 10px; }
+  .listing-price-row { grid-template-columns: 1fr; }
+}

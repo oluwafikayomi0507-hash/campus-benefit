@@ -1,0 +1,101 @@
+.application-card {
+  max-width: 900px;
+  padding: 42px;
+}
+
+.application-card h1 {
+  text-align: center;
+}
+
+.application-card > .portal-label,
+.application-intro {
+  text-align: center;
+}
+
+.application-intro {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.application-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 20px;
+  margin-top: 28px;
+}
+
+.application-field {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.application-field--full,
+.application-submit,
+.application-message {
+  grid-column: 1 / -1;
+}
+
+.application-field label {
+  color: #25364a;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.application-field label span {
+  color: #758078;
+  font-weight: 400;
+}
+
+.application-field input,
+.application-field textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid #d5ddd7;
+  border-radius: 9px;
+  background: #fff;
+  color: #071b3a;
+  font: inherit;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.application-field textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.application-field input:focus,
+.application-field textarea:focus {
+  border-color: #1b6b3a;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(27, 107, 58, .12);
+}
+
+.application-submit {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.application-message {
+  margin: 0;
+  text-align: center;
+}
+
+@media (max-width: 650px) {
+  .application-card {
+    padding: 28px 20px;
+  }
+
+  .application-form {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .application-field--full,
+  .application-submit,
+  .application-message {
+    grid-column: auto;
+  }
+}

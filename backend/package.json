@@ -1,18 +1,23 @@
 {
-  "name": "campus",
+  "name": "backend",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "dependencies": {
-    "dotenv": "^18.0.3",
-    "express": "^5.2.1",
-    "mongobd": "^0.0.1-security.0"
-  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.5",
+    "express": "^5.2.1",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.23.1"
+  }
 }

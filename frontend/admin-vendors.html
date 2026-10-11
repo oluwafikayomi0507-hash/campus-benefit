@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vendor Applications | Campus Benefit</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/vendor-portal.css">
+  <link rel="stylesheet" href="css/admin-vendors.css">
+</head>
+<body>
+  <main class="vendor-portal-page dashboard-page">
+    <header class="dashboard-topbar">
+      <a class="back-home" href="index.html">← Campus Benefit</a>
+      <button id="admin-logout" class="secondary-button" type="button">Log out</button>
+    </header>
+    <section class="dashboard-welcome">
+      <p class="portal-label">PRIVATE ADMIN PAGE</p>
+      <h1>Vendor applications</h1>
+      <p id="admin-message" role="status">Checking admin access...</p>
+    </section>
+    <section class="dashboard-panel">
+      <div class="admin-heading-row">
+        <h2>Waiting for review</h2>
+        <button id="refresh-applications" class="admin-secondary" type="button">Refresh</button>
+      </div>
+      <div id="vendor-applications" class="admin-application-list"></div>
+    </section>
+    <section class="dashboard-panel">
+      <div class="admin-heading-row">
+        <h2>Student support messages</h2>
+        <button id="refresh-support" class="admin-secondary" type="button">Refresh</button>
+      </div>
+      <p id="support-admin-status" role="status"></p>
+      <div id="support-messages" class="admin-application-list"></div>
+    </section>
+    <section class="dashboard-panel">
+      <div class="admin-heading-row">
+        <h2>Student opportunities</h2>
+        <button id="refresh-opportunities" class="admin-secondary" type="button">Refresh</button>
+      </div>
+      <p id="opportunity-admin-status" role="status">Publish listings for internships, competitions, gigs, and career programs.</p>
+      <form id="opportunity-form" class="admin-opportunity-form">
+        <label>Section
+          <select name="category" required>
+            <option value="internship">Internships</option>
+            <option value="competition">Competitions</option>
+            <option value="gig">Freelance &amp; gigs</option>
+            <option value="career">Career programs</option>
+          </select>
+        </label>
+        <label>Opportunity title<input name="title" maxlength="180" required></label>
+        <label>Organization<input name="organization" maxlength="180" required></label>
+        <label>Location (optional)<input name="location" maxlength="180" placeholder="e.g. Lagos or Remote"></label>
+        <label>Deadline (optional)<input name="deadline" type="date"></label>
+        <label>Application link<input name="applicationUrl" type="url" placeholder="https://..." required></label>
+        <label class="admin-opportunity-description">Description<textarea name="description" rows="4" maxlength="3000" required></textarea></label>
+        <button type="submit">Publish opportunity</button>
+      </form>
+      <div id="admin-opportunities" class="admin-application-list"></div>
+    </section>
+    <section class="dashboard-panel">
+      <div class="admin-heading-row">
+        <h2>Vendor promotions</h2>
+        <button id="refresh-admin-deals" class="admin-secondary" type="button">Refresh</button>
+      </div>
+      <p id="admin-deals-status" role="status">Review paid vendor promotions and control whether they appear to students.</p>
+      <div id="admin-deals" class="admin-application-list"></div>
+    </section>
+  </main>
+  <script src="js/admin-vendors.js"></script>
+  <script src="js/admin-opportunities.js"></script>
+  <script src="js/admin-deals.js?v=2"></script>
+</body>
+</html>

@@ -273,3 +273,20 @@
         font-size: 13px;
     }
 }
+.vendor-application-button {
+    display: block;
+    box-sizing: border-box;
+    text-align: center;
+    text-decoration: none;
+}
+
+.vendor-login-prompt {
+    margin-top: 22px;
+    text-align: center;
+    color: #666;
+}
+
+.vendor-login-prompt a {
+    color: #1b6b3a;
+    font-weight: 700;
+}
