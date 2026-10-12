@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: campus-benefit-staging
+    runtime: node
+    plan: free
+    buildCommand: npm --prefix backend ci
+    startCommand: npm --prefix backend start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: APP_BASE_URL
+        value: https://campus-benefit-staging.onrender.com
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
