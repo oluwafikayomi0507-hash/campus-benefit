@@ -1,6 +1,6 @@
 const express = require("express");
 const crypto = require("crypto");
-const { getSecretKey, finalizeListingPayment } = require("../services/paystack.service");
+const { getSecretKey, finalizeListingPayment, finalizeMarketplacePayment, notifyMarketplaceVendors } = require("../services/paystack.service");
 
 const router = express.Router();
 
@@ -24,6 +24,19 @@ router.post("/paystack/webhook", async (req, res) => {
   }
 
   try {
+    const marketplaceResult = await finalizeMarketplacePayment({
+      reference: event.data.reference,
+      amount: event.data.amount,
+      currency: event.data.currency,
+      domain: event.data.domain,
+      transactionId: event.data.id,
+    });
+    if (marketplaceResult.found) {
+      if (marketplaceResult.paid && !marketplaceResult.alreadyApplied) {
+        void notifyMarketplaceVendors(marketplaceResult.notifications);
+      }
+      return res.sendStatus(200);
+    }
     const result = await finalizeListingPayment({
       reference: event.data.reference,
       amount: event.data.amount,

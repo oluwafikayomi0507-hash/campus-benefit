@@ -32,6 +32,11 @@ CREATE TABLE IF NOT EXISTS vendors (
         CHECK (approval_status IN ('pending', 'approved', 'rejected')),
     review_note TEXT,
     delivery_fee NUMERIC(10, 2) NOT NULL DEFAULT 0 CHECK (delivery_fee >= 0),
+    paystack_subaccount_code VARCHAR(80),
+    payout_mode VARCHAR(10) CHECK (payout_mode IN ('test', 'live')),
+    payout_bank_name VARCHAR(120),
+    payout_account_name VARCHAR(160),
+    payout_account_last4 CHAR(4),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -60,9 +65,34 @@ CREATE TABLE IF NOT EXISTS vendor_orders (
     item_subtotal NUMERIC(10, 2) NOT NULL DEFAULT 0 CHECK (item_subtotal >= 0),
     delivery_fee NUMERIC(10, 2) NOT NULL DEFAULT 0 CHECK (delivery_fee >= 0),
     total_amount NUMERIC(10, 2) NOT NULL DEFAULT 0 CHECK (total_amount >= 0),
+    payment_status VARCHAR(20) NOT NULL DEFAULT 'not_required'
+        CHECK (payment_status IN ('not_required', 'pending', 'paid', 'failed')),
+    marketplace_payment_id BIGINT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS marketplace_payments (
+    id BIGSERIAL PRIMARY KEY,
+    student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    reference VARCHAR(100) NOT NULL UNIQUE,
+    amount_kobo BIGINT NOT NULL CHECK (amount_kobo > 0),
+    item_subtotal NUMERIC(10, 2) NOT NULL CHECK (item_subtotal >= 0),
+    delivery_total NUMERIC(10, 2) NOT NULL CHECK (delivery_total >= 0),
+    platform_fee NUMERIC(10, 2) NOT NULL CHECK (platform_fee >= 0),
+    payment_mode VARCHAR(10) NOT NULL CHECK (payment_mode IN ('test', 'live')),
+    status VARCHAR(20) NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'paid', 'failed', 'cancelled')),
+    paystack_transaction_id TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    paid_at TIMESTAMPTZ
+);
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'vendor_orders_marketplace_payment_fk') THEN
+        ALTER TABLE vendor_orders ADD CONSTRAINT vendor_orders_marketplace_payment_fk
+            FOREIGN KEY (marketplace_payment_id) REFERENCES marketplace_payments(id) ON DELETE RESTRICT;
+    END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS vendor_order_items (
     id BIGSERIAL PRIMARY KEY,
@@ -177,6 +207,7 @@ CREATE INDEX IF NOT EXISTS vendor_products_vendor_id_idx ON vendor_products(vend
 CREATE INDEX IF NOT EXISTS vendor_products_category_idx ON vendor_products(category);
 CREATE INDEX IF NOT EXISTS vendor_orders_vendor_created_idx ON vendor_orders(vendor_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS vendor_orders_student_created_idx ON vendor_orders(student_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS marketplace_payments_student_created_idx ON marketplace_payments(student_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS deal_listing_payments_vendor_created_idx ON deal_listing_payments(vendor_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS deals_vendor_created_idx ON deals(vendor_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS deals_public_active_expiry_idx ON deals(category, expires_at DESC) WHERE is_active = TRUE;

@@ -156,6 +156,76 @@ async function loadListingPackages() {
   }
 }
 
+async function loadPayoutSetup() {
+  const panel = document.createElement("section");
+  panel.className = "dashboard-panel";
+  const heading = document.createElement("h2");
+  heading.textContent = "Bank account for customer orders";
+  const help = document.createElement("p");
+  help.textContent = "Paystack sends your share directly to this account. Your bank number is sent securely to Paystack and is not saved by Campus Benefit. Connect one account to receive online order payments.";
+  const status = document.createElement("p");
+  status.setAttribute("role", "status");
+  panel.append(heading, help, status);
+  const anchor = document.querySelector(".dashboard-welcome");
+  anchor?.after(panel);
+  try {
+    const [payoutResult, bankResult] = await Promise.all([
+      vendorFetch("/api/vendor/payout"),
+      vendorFetch("/api/vendor/payout/banks"),
+    ]);
+    if (payoutResult.payout.payout_ready) {
+      const detail = document.createElement("p");
+      detail.textContent = `Connected: ${payoutResult.payout.payout_account_name} · ${payoutResult.payout.payout_bank_name} ending ${payoutResult.payout.payout_account_last4} (${payoutResult.payout.payout_mode} mode)`;
+      status.textContent = "Payout account ready.";
+      panel.appendChild(detail);
+      return;
+    }
+    const form = document.createElement("form");
+    form.className = "product-form";
+    const bankLabel = document.createElement("label"); bankLabel.textContent = "Bank";
+    const bank = document.createElement("select"); bank.required = true;
+    const placeholder = document.createElement("option"); placeholder.value = ""; placeholder.textContent = "Choose your bank"; bank.appendChild(placeholder);
+    for (const item of bankResult.banks) {
+      const option = document.createElement("option"); option.value = item.code; option.textContent = item.name; bank.appendChild(option);
+    }
+    const accountLabel = document.createElement("label"); accountLabel.textContent = "10-digit account number";
+    const account = document.createElement("input"); account.inputMode = "numeric"; account.autocomplete = "off"; account.maxLength = 10; account.pattern = "[0-9]{10}"; account.required = true;
+    const confirmWrap = document.createElement("label");
+    const confirm = document.createElement("input"); confirm.type = "checkbox"; confirm.disabled = true;
+    confirmWrap.append(confirm, document.createTextNode(" I confirm this is my bank account and the name shown is correct."));
+    const preview = document.createElement("p");
+    const submit = document.createElement("button"); submit.type = "submit"; submit.textContent = "Check bank details";
+    form.append(bankLabel, bank, accountLabel, account, confirmWrap, preview, submit);
+    panel.appendChild(form);
+    let verifiedName = "";
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault(); submit.disabled = true;
+      try {
+        const payload = { bankCode: bank.value, accountNumber: account.value.trim() };
+        if (!verifiedName) {
+          const result = await vendorFetch("/api/vendor/payout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+          verifiedName = result.accountName;
+          preview.textContent = `Paystack found: ${result.accountName} · ${result.bankName}. Confirm the name and bank belong to you before connecting.`;
+          confirm.disabled = false;
+          submit.textContent = "Connect payout account";
+        } else {
+          if (!confirm.checked) throw new Error("Please confirm the account name belongs to you.");
+          const result = await vendorFetch("/api/vendor/payout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, confirmedAccountName: verifiedName }) });
+          status.textContent = "Payout account connected.";
+          const detail = document.createElement("p");
+          detail.textContent = `Connected: ${result.payout.payout_account_name} · ${result.payout.payout_bank_name} ending ${result.payout.payout_account_last4} (${result.payout.payout_mode} mode)`;
+          form.replaceWith(detail);
+          help.textContent = "Online order payments can be sent directly to this account.";
+        }
+      } catch (error) {
+        status.textContent = error.message;
+      } finally { submit.disabled = false; }
+    });
+  } catch (error) {
+    status.textContent = error.message.includes("database update") ? error.message : "Payout setup is not available yet. Please try again later.";
+  }
+}
+
 function checkoutButton(listing) {
   const button = document.createElement("button");
   button.type = "button";
@@ -299,7 +369,7 @@ document.querySelector("#vendor-logout")?.addEventListener("click", async () => 
     welcome.textContent = `Welcome, ${currentVendor.business_name}`;
     document.querySelector("#vendor-delivery-fee").value = Number(currentVendor.delivery_fee || 0);
     await verifyListingPaymentFromReturn();
-    await Promise.all([loadProducts(), loadOrders(), loadListingPackages(), loadFeaturedListings()]);
+    await Promise.all([loadProducts(), loadOrders(), loadListingPackages(), loadFeaturedListings(), loadPayoutSetup()]);
   } catch (error) {
     showEmpty(ordersContainer, error.message);
   }

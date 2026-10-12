@@ -17,3 +17,7 @@ services:
         value: https://campus-benefit-staging.onrender.com
       - key: PAYSTACK_SECRET_KEY
         sync: false
+      - key: MARKETPLACE_PAYMENTS_ENABLED
+        value: "false"
+      - key: MARKETPLACE_PLATFORM_COMMISSION_PERCENT
+        value: "5"

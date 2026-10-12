@@ -272,6 +272,11 @@ document.querySelector("#checkout-form")?.addEventListener("submit", async (even
         deliveryMethod: deliveryMethodSelect.value,
       }),
     });
+    if (result.authorizationUrl) {
+      checkoutMessage.textContent = "Opening Paystack secure checkout…";
+      window.location.assign(result.authorizationUrl);
+      return;
+    }
     const grandTotal = result.orders.reduce((sum, order) => sum + Number(order.total_amount), 0);
     cart = [];
     saveCart();
@@ -285,6 +290,38 @@ document.querySelector("#checkout-form")?.addEventListener("submit", async (even
 });
 
 document.querySelector("#refresh-orders")?.addEventListener("click", loadStudentOrders);
+
+async function verifyMarketplacePaymentFromReturn() {
+  const url = new URL(window.location.href);
+  const reference = url.searchParams.get("reference");
+  if (url.searchParams.get("order_payment") !== "1" || !reference) return;
+  checkoutMessage.textContent = "Checking your payment securely…";
+  try {
+    const result = await apiRequest("/api/orders/payments/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reference }),
+    });
+    if (result.paid) {
+      cart = [];
+      saveCart();
+      document.querySelector("#delivery-note").value = "";
+      checkoutMessage.textContent = result.message;
+      await loadStudentOrders();
+    } else {
+      checkoutMessage.textContent = result.message;
+    }
+  } catch (error) {
+    checkoutMessage.textContent = error.message;
+  } finally {
+    url.searchParams.delete("reference");
+    url.searchParams.delete("trxref");
+    url.searchParams.delete("order_payment");
+    window.history.replaceState({}, "", url);
+  }
+}
+
 renderCart();
 loadProducts();
 loadStudentOrders();
+verifyMarketplacePaymentFromReturn();
