@@ -34,3 +34,5 @@ When creating the Render service, provide `DATABASE_URL` from the hosted Postgre
 After the service is deployed, add `campusbenefit.com.ng` as a custom domain in Render and copy the exact DNS records Render provides into the domain's DNS manager. Keep `APP_BASE_URL` set to `https://campusbenefit.com.ng` after DNS and HTTPS are active.
 
 Password reset email delivery requires a verified sending domain in Resend. Once verified, add `RESEND_API_KEY` and `EMAIL_FROM` to Render's environment settings, using a sender such as `Campus Benefit <passwords@campusbenefit.com.ng>`. Do not use `PASSWORD_RESET_MODE=console` in production; it is only for local development.
+
+New vendor applications send a notification email to the email addresses of users marked as administrators. This uses the same `RESEND_API_KEY` and `EMAIL_FROM` settings. Email delivery is best-effort; applications remain available for review on the Admin page if a notification cannot be sent.

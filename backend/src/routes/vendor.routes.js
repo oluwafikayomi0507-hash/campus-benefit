@@ -27,6 +27,43 @@ async function getApprovedVendor(vendorId) {
   return result.rows[0] || null;
 }
 
+async function notifyAdminsOfVendorApplication({ businessName, businessType, university }) {
+  if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) {
+    console.error("Vendor application notification is not configured. Set RESEND_API_KEY and EMAIL_FROM.");
+    return;
+  }
+
+  try {
+    const admins = await pool.query(
+      "SELECT email FROM users WHERE is_admin = TRUE AND email IS NOT NULL"
+    );
+    const recipients = [...new Set(admins.rows.map((admin) => clean(admin.email).toLowerCase()).filter(Boolean))];
+    if (!recipients.length) {
+      console.error("Could not send vendor application notification: no admin email addresses found.");
+      return;
+    }
+
+    const appBaseUrl = (process.env.APP_BASE_URL || "https://campusbenefit.com.ng").replace(/\/$/, "");
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: process.env.EMAIL_FROM,
+        to: recipients,
+        subject: "New Campus Benefit vendor application",
+        text: `A new vendor application for ${businessName} is waiting for review.\nBusiness type: ${businessType}\nUniversity: ${university}\nReview it here: ${appBaseUrl}/admin-vendors.html`,
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!response.ok) throw new Error(`Resend returned ${response.status}: ${await response.text()}`);
+  } catch (error) {
+    console.error("Could not send vendor application notification:", error.message);
+  }
+}
+
 function setVendorSession(res, token) {
   const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
   res.setHeader("Set-Cookie", `cb_vendor_session=${token}; HttpOnly${secure}; SameSite=Lax; Path=/; Max-Age=3600`);
@@ -74,6 +111,8 @@ router.post("/auth/signup", limitVendorSignup, async (req, res) => {
       [businessName, email, passwordHash, phoneNumber || null, whatsappNumber || null,
         social || null, businessType, university, location, description || null]
     );
+
+    await notifyAdminsOfVendorApplication({ businessName, businessType, university });
 
     return res.status(201).json({
       message: "Your business application was submitted and is waiting for Campus Benefit review.",
