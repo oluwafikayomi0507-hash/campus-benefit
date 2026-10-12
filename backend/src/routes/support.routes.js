@@ -1,11 +1,18 @@
 const express = require("express");
 const pool = require("../config/db");
 const requireAuth = require("../middlewares/auth.middleware");
+const createRateLimiter = require("../middlewares/rate-limit.middleware");
 
 const router = express.Router();
 const allowedTypes = new Set(["question", "problem", "suggestion", "complaint"]);
+const limitSupportMessages = createRateLimiter({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  message: "Too many support messages. Please wait an hour before sending another.",
+  keyGenerator: (req) => `user:${req.user.id}`,
+});
 
-router.post("/messages", requireAuth, async (req, res) => {
+router.post("/messages", requireAuth, limitSupportMessages, async (req, res) => {
   const type = typeof req.body?.type === "string" ? req.body.type.trim().toLowerCase() : "";
   const message = typeof req.body?.message === "string" ? req.body.message.trim() : "";
   if (!allowedTypes.has(type) || message.length < 5 || message.length > 3000) {

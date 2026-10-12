@@ -1,10 +1,17 @@
 const express = require("express");
 const pool = require("../config/db");
 const requireAuth = require("../middlewares/auth.middleware");
+const createRateLimiter = require("../middlewares/rate-limit.middleware");
 const { requireVendor, getApprovedVendor } = require("./vendor.routes");
 
 const router = express.Router();
 const productCategories = new Set(["food", "beauty", "fashion", "tech", "printing", "creative", "services"]);
+const limitStudentOrders = createRateLimiter({
+  windowMs: 60 * 60 * 1000,
+  limit: 10,
+  message: "Too many orders. Please wait an hour before placing another order.",
+  keyGenerator: (req) => `student:${req.user.id}`,
+});
 
 function requireStudent(req, res, next) {
   if (req.user?.role === "vendor") {
@@ -180,7 +187,7 @@ router.patch("/vendor/orders/:orderId/status", requireAuth, requireVendor, requi
   }
 });
 
-router.post("/orders", requireAuth, requireStudent, async (req, res) => {
+router.post("/orders", requireAuth, requireStudent, limitStudentOrders, async (req, res) => {
   const body = req.body ?? {};
   const customerPhone = typeof body.customerPhone === "string" ? body.customerPhone.trim() : "";
   const deliveryNote = typeof body.deliveryNote === "string" ? body.deliveryNote.trim() : "";
