@@ -1,10 +1,10 @@
-function createRateLimiter({ windowMs, limit, message }) {
-  const requestsByIp = new Map();
+function createRateLimiter({ windowMs, limit, message, keyGenerator = (req) => req.ip || req.socket?.remoteAddress || "unknown" }) {
+  const requestsByKey = new Map();
 
   return function rateLimit(req, res, next) {
     const now = Date.now();
-    const key = req.ip || req.socket?.remoteAddress || "unknown";
-    const recent = (requestsByIp.get(key) || []).filter((time) => now - time < windowMs);
+    const key = String(keyGenerator(req) || "unknown");
+    const recent = (requestsByKey.get(key) || []).filter((time) => now - time < windowMs);
 
     if (recent.length >= limit) {
       const retryAfterSeconds = Math.max(1, Math.ceil((recent[0] + windowMs - now) / 1000));
@@ -13,14 +13,14 @@ function createRateLimiter({ windowMs, limit, message }) {
     }
 
     recent.push(now);
-    requestsByIp.set(key, recent);
+    requestsByKey.set(key, recent);
 
     // Keep the in-memory store bounded and remove expired entries opportunistically.
-    if (requestsByIp.size > 5000) {
-      for (const [address, timestamps] of requestsByIp) {
+    if (requestsByKey.size > 5000) {
+      for (const [address, timestamps] of requestsByKey) {
         const active = timestamps.filter((time) => now - time < windowMs);
-        if (active.length) requestsByIp.set(address, active);
-        else requestsByIp.delete(address);
+        if (active.length) requestsByKey.set(address, active);
+        else requestsByKey.delete(address);
       }
     }
 

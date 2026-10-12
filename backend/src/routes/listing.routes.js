@@ -2,12 +2,25 @@ const express = require("express");
 const crypto = require("crypto");
 const pool = require("../config/db");
 const requireAuth = require("../middlewares/auth.middleware");
+const createRateLimiter = require("../middlewares/rate-limit.middleware");
 const { requireVendor, getApprovedVendor } = require("./vendor.routes");
 const { getSecretKey, getKeyMode, paystackRequest, finalizeListingPayment } = require("../services/paystack.service");
 
 const router = express.Router();
 const allowedCategories = new Set(["food", "beauty", "fashion", "tech", "printing", "creative", "services"]);
 const clean = (value) => typeof value === "string" ? value.trim() : "";
+const limitListingCheckout = createRateLimiter({
+  windowMs: 10 * 60 * 1000,
+  limit: 5,
+  message: "Too many checkout attempts. Please wait 10 minutes before trying again.",
+  keyGenerator: (req) => `vendor:${req.vendor.id}`,
+});
+const limitPaymentVerification = createRateLimiter({
+  windowMs: 60 * 1000,
+  limit: 30,
+  message: "Too many payment checks. Please wait a minute before trying again.",
+  keyGenerator: (req) => `vendor:${req.vendor.id}`,
+});
 
 async function requireApprovedVendor(req, res, next) {
   try {
@@ -203,7 +216,7 @@ router.post("/listings", async (req, res) => {
   }
 });
 
-router.post("/listings/:listingId/checkout", async (req, res) => {
+router.post("/listings/:listingId/checkout", limitListingCheckout, async (req, res) => {
   const listingId = Number(req.params.listingId);
   if (!Number.isSafeInteger(listingId) || listingId < 1) {
     return res.status(400).json({ message: "Choose a valid listing." });
@@ -217,7 +230,7 @@ router.post("/listings/:listingId/checkout", async (req, res) => {
   }
 });
 
-router.post("/listings/payments/verify", async (req, res) => {
+router.post("/listings/payments/verify", limitPaymentVerification, async (req, res) => {
   const reference = clean(req.body?.reference);
   if (!/^[A-Za-z0-9.=-]{1,100}$/.test(reference)) {
     return res.status(400).json({ message: "Enter a valid payment reference." });
