@@ -36,3 +36,5 @@ After the service is deployed, add `campusbenefit.com.ng` as a custom domain in 
 Password reset email delivery requires a verified sending domain in Resend. Once verified, add `RESEND_API_KEY` and `EMAIL_FROM` to Render's environment settings, using a sender such as `Campus Benefit <passwords@campusbenefit.com.ng>`. Do not use `PASSWORD_RESET_MODE=console` in production; it is only for local development.
 
 New vendor applications send a notification email to the email addresses of users marked as administrators. This uses the same `RESEND_API_KEY` and `EMAIL_FROM` settings. Email delivery is best-effort; applications remain available for review on the Admin page if a notification cannot be sent.
+
+New marketplace orders send a short email notification to the affected vendor after the order transaction commits. The email links to the vendor dashboard and does not include student contact details. If email delivery fails, the order remains saved and can still be viewed in the dashboard. The dashboard also refreshes the order inbox every 60 seconds while it is open.

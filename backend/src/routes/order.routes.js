@@ -32,6 +32,35 @@ async function requireApprovedVendor(req, res, next) {
   }
 }
 
+async function notifyVendorOfNewOrder(email, orderId) {
+  if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) {
+    console.error("Vendor order notification is not configured. Set RESEND_API_KEY and EMAIL_FROM.");
+    return;
+  }
+
+  const appBaseUrl = (process.env.APP_BASE_URL || "https://campusbenefit.com.ng").replace(/\/$/, "");
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: process.env.EMAIL_FROM,
+        to: [email],
+        subject: `New Campus Benefit order #${orderId}`,
+        text: `A student placed order #${orderId}. Sign in to your vendor dashboard to view the order and respond: ${appBaseUrl}/vendor-dashboard.html`,
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!response.ok) throw new Error(`Resend returned ${response.status}: ${await response.text()}`);
+  } catch (error) {
+    // The order is already saved; an email problem must not make checkout appear to fail.
+    console.error("Could not send vendor order notification:", error.message);
+  }
+}
+
 router.get("/products", requireAuth, requireStudent, async (req, res) => {
   const category = typeof req.query.category === "string" ? req.query.category.trim().toLowerCase() : "";
   if (category && !productCategories.has(category)) {
@@ -236,10 +265,11 @@ router.post("/orders", requireAuth, requireStudent, limitStudentOrders, async (r
   try {
     await client.query("BEGIN");
     const createdOrders = [];
+    const orderNotifications = [];
     for (const group of groups) {
       const productIds = Array.from(group.quantities.keys());
       const productResult = await client.query(
-        `SELECT p.id, p.vendor_id, p.product_name, p.price, v.delivery_fee
+        `SELECT p.id, p.vendor_id, p.product_name, p.price, v.delivery_fee, v.email AS vendor_email
          FROM vendor_products p
          JOIN vendors v ON v.id = p.vendor_id
          WHERE p.id = ANY($1::integer[]) AND p.vendor_id = $2
@@ -278,9 +308,13 @@ router.post("/orders", requireAuth, requireStudent, limitStudentOrders, async (r
         );
       }
       createdOrders.push(order);
+      orderNotifications.push({ email: productResult.rows[0].vendor_email, orderId: order.id });
     }
 
     await client.query("COMMIT");
+    for (const notification of orderNotifications) {
+      void notifyVendorOfNewOrder(notification.email, notification.orderId);
+    }
     return res.status(201).json({ message: "Your order was sent to the vendor(s).", orders: createdOrders });
   } catch (error) {
     try { await client.query("ROLLBACK"); } catch { /* Transaction may already be closed. */ }

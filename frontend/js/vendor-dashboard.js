@@ -305,6 +305,13 @@ document.querySelector("#vendor-logout")?.addEventListener("click", async () => 
   }
 })();
 
+// Keep the vendor's inbox current while the dashboard is open.
+window.setInterval(() => {
+  if (!document.hidden) {
+    loadOrders().catch((error) => console.error("Could not refresh vendor orders:", error));
+  }
+}, 60000);
+
 async function verifyListingPaymentFromReturn() {
   const url = new URL(window.location.href);
   const reference = url.searchParams.get("reference");
