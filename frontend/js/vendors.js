@@ -157,6 +157,8 @@ function renderProducts(products) {
         vendorName: product.business_name,
         price: Number(product.price),
         deliveryFee: Number(product.delivery_fee || 0),
+        description: product.description || "",
+        imageUrl: product.image_url || "",
         quantity: 1,
       });
       saveCart();
@@ -183,15 +185,35 @@ function renderCart() {
 
     const line = document.createElement("div");
     line.className = "cart-line";
+    const details = document.createElement("div");
+    details.className = "cart-line-details";
+    if (item.imageUrl) {
+      const image = document.createElement("img");
+      image.className = "cart-line-image";
+      image.src = item.imageUrl;
+      image.alt = item.productName;
+      image.loading = "lazy";
+      details.appendChild(image);
+    }
+    const text = document.createElement("div");
     const name = document.createElement("span");
     name.className = "cart-line-name";
     name.textContent = item.productName;
-    const lineTotal = document.createElement("span");
-    lineTotal.className = "cart-line-price";
-    lineTotal.textContent = money(item.price * item.quantity);
+    text.appendChild(name);
     const vendor = document.createElement("span");
     vendor.className = "cart-line-vendor";
     vendor.textContent = item.vendorName;
+    text.appendChild(vendor);
+    if (item.description) {
+      const description = document.createElement("p");
+      description.className = "cart-line-description";
+      description.textContent = item.description;
+      text.appendChild(description);
+    }
+    details.appendChild(text);
+    const lineTotal = document.createElement("span");
+    lineTotal.className = "cart-line-price";
+    lineTotal.textContent = money(item.price * item.quantity);
     const controls = document.createElement("div");
     controls.className = "cart-line-controls";
     const minus = document.createElement("button");
@@ -214,7 +236,7 @@ function renderCart() {
       saveCart();
     });
     controls.append(minus, quantity, plus);
-    line.append(name, lineTotal, vendor, controls);
+    line.append(details, lineTotal, controls);
     cartItemsElement.appendChild(line);
   });
 

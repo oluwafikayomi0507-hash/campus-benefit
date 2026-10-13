@@ -51,16 +51,21 @@ router.patch("/vendors/:vendorId/review", async (req, res) => {
     const result = await pool.query(
       `UPDATE vendors
        SET approval_status = $1,
-           is_approved = ($1 = 'approved'),
-           review_note = $2
-       WHERE id = $3 AND approval_status = 'pending'
+           is_approved = $2,
+           review_note = $3
+       WHERE id = $4 AND approval_status = 'pending'
        RETURNING id, business_name, approval_status`,
-      [decision, reviewNote || null, vendorId]
+      [decision, decision === "approved", reviewNote || null, vendorId]
     );
     if (!result.rowCount) return res.status(404).json({ message: "Pending vendor application not found." });
     return res.json({ message: `Business application ${decision}.`, vendor: result.rows[0] });
   } catch (error) {
-    console.error("Could not review vendor application:", error.message);
+    console.error("Could not review vendor application:", {
+      message: error.message,
+      code: error.code,
+      constraint: error.constraint,
+      column: error.column,
+    });
     return res.status(500).json({ message: "Could not review vendor application." });
   }
 });
