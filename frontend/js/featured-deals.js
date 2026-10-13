@@ -6,6 +6,10 @@ const dealCategoryNames = {
   tech: "tech and gadgets",
 };
 
+function normalizeVendorName(name) {
+  return (name || "").trim().toLocaleLowerCase().replace(/[’‘`]/g, "'").replace(/\s+/g, " ");
+}
+
 async function loadFeaturedDeals() {
   const feed = document.querySelector(".featured-deals-feed");
   if (!feed) return;
@@ -40,7 +44,7 @@ async function loadFeaturedDeals() {
     if (!response.ok) throw new Error(deals.message || "Could not load featured deals.");
 
     const visibleDeals = vendorName
-      ? deals.filter((deal) => (deal.vendor_name || "").trim().toLocaleLowerCase() === vendorName.toLocaleLowerCase())
+            ? deals.filter((deal) => normalizeVendorName(deal.vendor_name) === normalizeVendorName(vendorName))
       : storefront ? [] : deals;
 
     if (!visibleDeals.length) {
