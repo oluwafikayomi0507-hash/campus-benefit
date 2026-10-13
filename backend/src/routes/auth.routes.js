@@ -47,6 +47,10 @@ router.post("/signup", limitSignup, async (req, res) => {
     return res.status(400).json({ message: "Please complete all required fields." });
   }
 
+  if (university.length > 180) {
+    return res.status(400).json({ message: "University or school name must be 180 characters or fewer." });
+  }
+
   if (!emailPattern.test(email)) {
     return res.status(400).json({ message: "Enter a valid email address." });
   }

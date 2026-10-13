@@ -71,16 +71,15 @@
                 <div class="form-row">
 
                     <div class="form-group">
-                        <label for="university">University</label>
-
-                        <select id="university" name="university" required>
-                            <option value="">Select university</option>
-                            <option value="LASU">LASU</option>
-                            <option value="UNILAG">UNILAG</option>
-                            <option value="UI">University of Ibadan</option>
-                            <option value="YABATECH">YABATECH</option>
-                            <option value="Other">Other</option>
-                        </select>
+                        <label for="university">University or school</label>
+                        <input id="university" name="university" list="university-options" maxlength="180" required
+                            autocomplete="organization" placeholder="Type or choose your school">
+                        <datalist id="university-options">
+                            <option value="Lagos State University"></option>
+                            <option value="University of Lagos"></option>
+                            <option value="University of Ibadan"></option>
+                            <option value="Yaba College of Technology"></option>
+                        </datalist>
                     </div>
 
 

@@ -87,6 +87,9 @@ router.post("/auth/signup", limitVendorSignup, async (req, res) => {
   if (!businessName || !businessType || !university || !location || !email || !password) {
     return res.status(400).json({ message: "Complete all required business and account fields." });
   }
+  if (university.length > 180) {
+    return res.status(400).json({ message: "University or campus name must be 180 characters or fewer." });
+  }
   if (!emailPattern.test(email)) {
     return res.status(400).json({ message: "Enter a valid business email address." });
   }
