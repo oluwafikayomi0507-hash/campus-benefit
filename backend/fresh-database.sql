@@ -68,6 +68,8 @@ CREATE TABLE IF NOT EXISTS vendor_orders (
     payment_status VARCHAR(20) NOT NULL DEFAULT 'not_required'
         CHECK (payment_status IN ('not_required', 'pending', 'paid', 'failed')),
     marketplace_payment_id BIGINT,
+    cancellation_reason TEXT,
+    cancelled_by VARCHAR(10) CHECK (cancelled_by IN ('student', 'vendor')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

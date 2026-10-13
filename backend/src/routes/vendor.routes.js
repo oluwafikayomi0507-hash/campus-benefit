@@ -12,6 +12,7 @@ const limitVendorSignup = createRateLimiter({ windowMs: 60 * 60 * 1000, limit: 5
 const limitVendorLogin = createRateLimiter({ windowMs: 15 * 60 * 1000, limit: 10, message: "Too many login attempts. Please wait 15 minutes and try again." });
 const limitPayoutSetup = createRateLimiter({ windowMs: 60 * 60 * 1000, limit: 5, message: "Too many payout setup attempts. Please try again later.", keyGenerator: (req) => `vendor-payout:${req.user?.id || req.ip}` });
 const clean = (value) => typeof value === "string" ? value.trim() : "";
+const payoutSetupEnabled = () => process.env.VENDOR_PAYOUT_SETUP_ENABLED === "true";
 
 function requireVendor(req, res, next) {
   if (req.user?.role !== "vendor") {
@@ -188,8 +189,8 @@ router.get("/me", requireAuth, requireVendor, async (req, res) => {
 });
 
 router.get("/payout/banks", requireAuth, requireVendor, async (req, res) => {
-  if (process.env.MARKETPLACE_PAYMENTS_ENABLED !== "true") {
-    return res.status(503).json({ message: "Online marketplace payments are not enabled yet." });
+  if (!payoutSetupEnabled()) {
+    return res.status(503).json({ message: "Vendor payout setup is not enabled yet." });
   }
   try {
     const banks = await paystackRequest("/bank?country=nigeria&perPage=100", { method: "GET" });
@@ -217,8 +218,8 @@ router.get("/payout", requireAuth, requireVendor, async (req, res) => {
 });
 
 router.post("/payout", requireAuth, requireVendor, limitPayoutSetup, async (req, res) => {
-  if (process.env.MARKETPLACE_PAYMENTS_ENABLED !== "true") {
-    return res.status(503).json({ message: "Online marketplace payments are not enabled yet." });
+  if (!payoutSetupEnabled()) {
+    return res.status(503).json({ message: "Vendor payout setup is not enabled yet." });
   }
   const bankCode = clean(req.body?.bankCode);
   const accountNumber = clean(req.body?.accountNumber).replace(/\s/g, "");

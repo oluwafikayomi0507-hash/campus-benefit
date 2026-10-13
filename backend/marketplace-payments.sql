@@ -28,6 +28,9 @@ CREATE TABLE IF NOT EXISTS marketplace_payments (
 ALTER TABLE vendor_orders ADD COLUMN IF NOT EXISTS payment_status VARCHAR(20) NOT NULL DEFAULT 'not_required'
   CHECK (payment_status IN ('not_required', 'pending', 'paid', 'failed'));
 ALTER TABLE vendor_orders ADD COLUMN IF NOT EXISTS marketplace_payment_id BIGINT;
+ALTER TABLE vendor_orders ADD COLUMN IF NOT EXISTS cancellation_reason TEXT;
+ALTER TABLE vendor_orders ADD COLUMN IF NOT EXISTS cancelled_by VARCHAR(10)
+  CHECK (cancelled_by IN ('student', 'vendor'));
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'vendor_orders_marketplace_payment_fk') THEN
     ALTER TABLE vendor_orders ADD CONSTRAINT vendor_orders_marketplace_payment_fk

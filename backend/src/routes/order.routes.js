@@ -298,7 +298,8 @@ router.get("/vendor/orders", requireAuth, requireVendor, requireApprovedVendor, 
   try {
     const result = await pool.query(
       `SELECT o.id, o.student_id, o.customer_phone, o.delivery_note, o.delivery_method,
-              o.item_subtotal, o.delivery_fee, o.total_amount, o.status, o.created_at,
+              o.item_subtotal, o.delivery_fee, o.total_amount, o.status, o.payment_status,
+              o.cancellation_reason, o.cancelled_by, o.created_at,
               u.full_name AS student_name, u.email AS student_email,
               COALESCE(json_agg(json_build_object(
                 'productName', oi.product_name,
@@ -328,31 +329,87 @@ router.patch("/vendor/orders/:orderId/status", requireAuth, requireVendor, requi
     ready: ["completed", "cancelled"],
   };
   const status = typeof req.body?.status === "string" ? req.body.status : "";
+  const cancellationReason = typeof req.body?.cancellationReason === "string"
+    ? req.body.cancellationReason.trim()
+    : "";
   const orderId = Number(req.params.orderId);
   if (!Number.isSafeInteger(orderId) || orderId < 1 || !Object.values(transitions).some((next) => next.includes(status))) {
     return res.status(400).json({ message: "Choose a valid order and status." });
   }
+  if (status === "cancelled" && (!cancellationReason || cancellationReason.length > 1000)) {
+    return res.status(400).json({ message: "Enter a cancellation reason (up to 1,000 characters) before cancelling this order." });
+  }
 
   try {
     const current = await pool.query(
-      "SELECT status FROM vendor_orders WHERE id = $1 AND vendor_id = $2 AND payment_status <> 'pending'",
+      "SELECT status, payment_status FROM vendor_orders WHERE id = $1 AND vendor_id = $2 AND payment_status <> 'pending'",
       [orderId, req.vendor.id]
     );
     if (!current.rowCount) return res.status(404).json({ message: "Order not found." });
+    if (status === "cancelled" && current.rows[0].payment_status === "paid") {
+      return res.status(409).json({ message: "This order has been paid. Contact Campus Benefit support to review cancellation and refund options." });
+    }
     if (!transitions[current.rows[0].status]?.includes(status)) {
       return res.status(409).json({ message: `Order cannot move from ${current.rows[0].status} to ${status}.` });
     }
     const result = await pool.query(
-      `UPDATE vendor_orders SET status = $1, updated_at = NOW()
+      `UPDATE vendor_orders
+       SET status = $1,
+           cancellation_reason = CASE WHEN $1 = 'cancelled' THEN $5 ELSE cancellation_reason END,
+           cancelled_by = CASE WHEN $1 = 'cancelled' THEN 'vendor' ELSE cancelled_by END,
+           updated_at = NOW()
        WHERE id = $2 AND vendor_id = $3 AND status = $4
        RETURNING id, status, updated_at`,
-      [status, orderId, req.vendor.id, current.rows[0].status]
+      [status, orderId, req.vendor.id, current.rows[0].status, cancellationReason || null]
     );
     if (!result.rowCount) return res.status(409).json({ message: "This order changed. Refresh your inbox and try again." });
     return res.json({ order: result.rows[0] });
   } catch (error) {
     console.error("Could not update order:", error.message);
     return res.status(500).json({ message: "Could not update order." });
+  }
+});
+
+router.post("/orders/:orderId/cancel", requireAuth, requireStudent, async (req, res) => {
+  const orderId = Number(req.params.orderId);
+  const reason = typeof req.body?.reason === "string" ? req.body.reason.trim() : "";
+  if (!Number.isSafeInteger(orderId) || orderId < 1) {
+    return res.status(400).json({ message: "Choose a valid order." });
+  }
+  if (!reason || reason.length > 1000) {
+    return res.status(400).json({ message: "Enter a cancellation reason (up to 1,000 characters)." });
+  }
+
+  try {
+    const order = await pool.query(
+      "SELECT status, payment_status FROM vendor_orders WHERE id = $1 AND student_id = $2",
+      [orderId, req.user.id]
+    );
+    if (!order.rowCount) return res.status(404).json({ message: "Order not found." });
+    if (order.rows[0].payment_status === "paid") {
+      return res.status(409).json({ message: "This order has been paid. Contact Campus Benefit support to review cancellation and refund options." });
+    }
+    if (order.rows[0].payment_status !== "not_required") {
+      return res.status(409).json({ message: "This order's payment is still being checked. Refresh My Orders before trying to cancel." });
+    }
+    if (order.rows[0].status !== "pending") {
+      return res.status(409).json({ message: "You can cancel an order only before the vendor accepts it." });
+    }
+
+    const cancelled = await pool.query(
+      `UPDATE vendor_orders
+       SET status = 'cancelled', cancellation_reason = $1, cancelled_by = 'student', updated_at = NOW()
+       WHERE id = $2 AND student_id = $3 AND status = 'pending' AND payment_status = 'not_required'
+       RETURNING id, status, cancellation_reason, cancelled_by`,
+      [reason, orderId, req.user.id]
+    );
+    if (!cancelled.rowCount) {
+      return res.status(409).json({ message: "The vendor updated this order at the same time. Refresh My Orders and check its status." });
+    }
+    return res.json({ message: "Your order was cancelled and the reason was saved.", order: cancelled.rows[0] });
+  } catch (error) {
+    console.error("Could not cancel student order:", error.message);
+    return res.status(500).json({ message: "Could not cancel your order." });
   }
 });
 
@@ -520,7 +577,7 @@ router.get("/orders/mine", requireAuth, requireStudent, async (req, res) => {
     const result = await pool.query(
       `SELECT o.id, o.vendor_id, v.business_name, o.customer_phone, o.delivery_note,
               o.delivery_method, o.item_subtotal, o.delivery_fee, o.total_amount,
-              o.status, o.created_at,
+              o.status, o.payment_status, o.cancellation_reason, o.cancelled_by, o.created_at,
               COALESCE(json_agg(json_build_object(
                 'productName', oi.product_name,
                 'unitPrice', oi.unit_price,

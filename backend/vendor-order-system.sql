@@ -35,9 +35,15 @@ CREATE TABLE IF NOT EXISTS vendor_orders (
     delivery_note TEXT,
     status VARCHAR(20) NOT NULL DEFAULT 'pending'
         CHECK (status IN ('pending', 'accepted', 'preparing', 'ready', 'completed', 'cancelled')),
+    cancellation_reason TEXT,
+    cancelled_by VARCHAR(10) CHECK (cancelled_by IN ('student', 'vendor')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE vendor_orders ADD COLUMN IF NOT EXISTS cancellation_reason TEXT;
+ALTER TABLE vendor_orders ADD COLUMN IF NOT EXISTS cancelled_by VARCHAR(10)
+    CHECK (cancelled_by IN ('student', 'vendor'));
 
 CREATE TABLE IF NOT EXISTS vendor_order_items (
     id BIGSERIAL PRIMARY KEY,

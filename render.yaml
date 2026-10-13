@@ -19,5 +19,7 @@ services:
         sync: false
       - key: MARKETPLACE_PAYMENTS_ENABLED
         value: "false"
+      - key: VENDOR_PAYOUT_SETUP_ENABLED
+        value: "false"
       - key: MARKETPLACE_PLATFORM_COMMISSION_PERCENT
         value: "5"

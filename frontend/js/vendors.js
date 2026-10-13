@@ -231,16 +231,58 @@ async function loadStudentOrders() {
       const heading = document.createElement("h3");
       heading.textContent = `Order #${order.id} · ${order.business_name} · ${order.status}`;
       card.appendChild(heading);
+      if (order.cancellation_reason) {
+        const reason = document.createElement("p");
+        reason.textContent = `${order.cancelled_by === "student" ? "Your" : "Vendor"} cancellation reason: ${order.cancellation_reason}`;
+        card.appendChild(reason);
+      }
       for (const item of order.items) {
         const line = document.createElement("p");
         line.textContent = `${item.quantity} × ${item.productName} — ${money(item.unitPrice)}`;
         card.appendChild(line);
       }
+      const payment = document.createElement("p");
+      payment.textContent = order.payment_status === "paid"
+        ? "Payment: confirmed by Paystack"
+        : "Payment: arrange directly with the vendor";
+      card.appendChild(payment);
       const method = document.createElement("p");
       method.textContent = `Method: ${order.delivery_method}`;
       const total = document.createElement("p");
       total.textContent = `Items ${money(order.item_subtotal)} + delivery ${money(order.delivery_fee)} = ${money(order.total_amount)}`;
       card.append(method, total);
+      if (order.status === "pending" && order.payment_status === "not_required") {
+        const cancel = document.createElement("button");
+        cancel.type = "button";
+        cancel.className = "refresh-button";
+        cancel.textContent = "Cancel order";
+        cancel.addEventListener("click", async () => {
+          const enteredReason = window.prompt("Why do you need to cancel this order? A reason is required and will be saved.");
+          if (enteredReason === null) return;
+          const reason = enteredReason.trim();
+          if (!reason) {
+            window.alert("Enter a reason before cancelling this order.");
+            return;
+          }
+          cancel.disabled = true;
+          try {
+            await apiRequest(`/api/orders/${order.id}/cancel`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ reason }),
+            });
+            await loadStudentOrders();
+          } catch (error) {
+            window.alert(error.message);
+            cancel.disabled = false;
+          }
+        });
+        card.appendChild(cancel);
+      } else if (order.payment_status === "paid" && order.status !== "completed" && order.status !== "cancelled") {
+        const note = document.createElement("p");
+        note.textContent = "This order is paid. Contact Campus Benefit support to request cancellation and refund review.";
+        card.appendChild(note);
+      }
       studentOrdersElement.appendChild(card);
     }
   } catch (error) {

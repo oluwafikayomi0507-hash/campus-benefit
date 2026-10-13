@@ -77,12 +77,22 @@ function statusButton(label, status, orderId) {
   button.className = "small-action";
   button.textContent = label;
   button.addEventListener("click", async () => {
+    let cancellationReason = "";
+    if (status === "cancelled") {
+      const enteredReason = window.prompt("Why are you cancelling this order? A reason is required and will be saved with the order.");
+      if (enteredReason === null) return;
+      cancellationReason = enteredReason.trim();
+      if (!cancellationReason) {
+        window.alert("Enter a reason before cancelling this order.");
+        return;
+      }
+    }
     button.disabled = true;
     try {
       await vendorFetch(`/api/vendor/orders/${orderId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, cancellationReason }),
       });
       await loadOrders();
     } catch (error) {
@@ -109,6 +119,11 @@ async function loadOrders() {
     const total = document.createElement("p");
     total.textContent = `Total: ₦${Number(order.total_amount).toLocaleString()} · ${order.delivery_method}`;
     card.appendChild(total);
+    const payment = document.createElement("p");
+    payment.textContent = order.payment_status === "paid"
+      ? "Payment: paid through Paystack"
+      : "Payment: arrange directly with the customer";
+    card.appendChild(payment);
     if (order.customer_phone) {
       const phone = document.createElement("p");
       phone.textContent = `Phone: ${order.customer_phone}`;
@@ -124,6 +139,11 @@ async function loadOrders() {
       note.textContent = `Note: ${order.delivery_note}`;
       card.appendChild(note);
     }
+    if (order.cancellation_reason) {
+      const reason = document.createElement("p");
+      reason.textContent = `${order.cancelled_by === "student" ? "Student" : "Vendor"} cancellation reason: ${order.cancellation_reason}`;
+      card.appendChild(reason);
+    }
     const actions = document.createElement("div");
     actions.className = "order-actions";
     const nextActions = {
@@ -133,7 +153,13 @@ async function loadOrders() {
       ready: [["Complete", "completed"], ["Cancel", "cancelled"]],
     };
     for (const [label, nextStatus] of nextActions[order.status] || []) {
+      if (order.payment_status === "paid" && nextStatus === "cancelled") continue;
       actions.appendChild(statusButton(label, nextStatus, order.id));
+    }
+    if (order.payment_status === "paid" && order.status !== "completed" && order.status !== "cancelled") {
+      const note = document.createElement("p");
+      note.textContent = "For a paid order that cannot be fulfilled, contact Campus Benefit support to review a refund.";
+      card.appendChild(note);
     }
     card.appendChild(actions);
     ordersContainer.appendChild(card);
@@ -222,7 +248,7 @@ async function loadPayoutSetup() {
       } finally { submit.disabled = false; }
     });
   } catch (error) {
-    status.textContent = error.message.includes("database update") ? error.message : "Payout setup is not available yet. Please try again later.";
+    status.textContent = error.message || "Payout setup is not available yet. Please try again later.";
   }
 }
 

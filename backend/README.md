@@ -13,6 +13,10 @@ Express serves the frontend and JSON API from `server.js`. PostgreSQL credential
 - `/api/deals` — active, paid or permanent listings that have not expired.
 - `/api/payments/paystack/webhook` — signed Paystack payment notifications.
 
+Student and vendor cancellations require a non-empty reason. Students can cancel their own unpaid order while it is still waiting for vendor acceptance; a status check prevents cancellation if the vendor accepts it at the same time. The backend stores the reason and who cancelled, then shows it to both sides. Paid orders cannot be cancelled from either dashboard; Campus Benefit support must review refund options. For an existing database, run `vendor-order-cancellation.sql` before deploying this change. `fresh-database.sql`, `vendor-order-system.sql`, and `marketplace-payments.sql` also include the columns for their respective setup paths.
+
+Marketplace payment approval happens server-side: the webhook signature is checked and the transaction must match the stored order amount, NGN currency, and test/live mode before the order is marked paid. Keep `MARKETPLACE_PAYMENTS_ENABLED=false` until vendor payout accounts and the refund process are ready. `VENDOR_PAYOUT_SETUP_ENABLED` is a separate switch: it can be enabled to let approved vendors connect payout accounts while buyer checkout remains disabled. For safe testing, enable it only on staging with a Paystack test key. In production, enable it only when vendors are ready to submit their bank details to Paystack; connecting a payout account does not enable buyer checkout.
+
 ## Featured listings
 
 `vendor-featured-listings.sql` creates the payment records and saves the initial packages: ₦1,000 for 7 days and ₦3,000 for 30 days. It has already been applied to the local database. Package prices are read from PostgreSQL, so future price changes do not require code changes.
