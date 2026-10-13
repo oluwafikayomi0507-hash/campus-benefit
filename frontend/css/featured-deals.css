@@ -15,3 +15,26 @@
 .featured-deal-content a:hover { background: #14552e; }
 [hidden] { display: none !important; }
 @media (max-width: 600px) { .featured-deals-grid { grid-template-columns: 1fr; } .featured-deal-card > img { max-height: 210px; } }
+
+.featured-deals-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.featured-vendor-container { overflow: hidden; border: 1px solid #e1e8e3; border-radius: 18px; background: #fff; box-shadow: 0 10px 28px rgba(7,27,58,.06); }
+.featured-vendor-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0; padding: 22px 24px; color: #071b3a; font-size: 20px; font-weight: 750; cursor: pointer; list-style: none; }
+.featured-vendor-heading::-webkit-details-marker { display: none; }
+.featured-vendor-heading::after { content: "+"; color: #1b6b3a; font-size: 25px; line-height: 1; }
+.featured-vendor-container[open] > .featured-vendor-heading::after { content: "−"; }
+.featured-vendor-container > section.featured-vendor-heading { cursor: default; }
+.featured-vendor-container > section.featured-vendor-heading::after { content: none; }
+.featured-vendor-count { flex: 0 0 auto; padding: 6px 11px; border-radius: 999px; background: #eaf4ed; color: #1b6b3a; font-size: 13px; font-weight: 700; }
+.featured-vendor-ordering-note { margin: 0 24px 16px; padding: 12px 14px; border-radius: 10px; background: #fff8e8; color: #725617; font-size: 14px; line-height: 1.5; }
+.featured-vendor-products { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; padding: 0 20px 20px; }
+.featured-vendor-products .featured-deal-card { box-shadow: none; }
+.featured-deal-content h3 { margin: 0 0 10px; color: #071b3a; font-size: 18px; }
+@media (max-width: 600px) { .featured-vendor-heading { padding: 18px; font-size: 18px; } .featured-vendor-products { grid-template-columns: 1fr; padding: 0 14px 14px; } .featured-vendor-ordering-note { margin: 0 18px 14px; } }
+
+.featured-vendor-container > h2.featured-vendor-heading { cursor: default; }
+.featured-vendor-container > h2.featured-vendor-heading::after { content: none; }
+
+.featured-deal-content .featured-add-to-cart { display: inline-block; margin-top: 10px; padding: 10px 15px; border: 0; border-radius: 8px; background: #1b6b3a; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.featured-deal-content .featured-add-to-cart:hover { background: #14552e; }
+.featured-vendor-cart-link { display: inline-block; margin: 0 20px 20px; padding: 11px 17px; border-radius: 8px; background: #1b6b3a; color: #fff; font-weight: 700; text-decoration: none; }
+.featured-vendor-cart-link:hover { background: #14552e; }
