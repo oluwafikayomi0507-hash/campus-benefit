@@ -11,10 +11,10 @@
   <main class="vendors-page">
     <div class="vendors-topbar">
       <a class="back-home" href="index.html">← Back to Campus Benefit</a>
-      <a class="cart-jump" href="#order-cart" aria-label="View your order cart" hidden>
-        <span aria-hidden="true">🛒</span> View cart <span id="cart-shortcut-count" class="cart-shortcut-count">0</span>
-        <span id="cart-shortcut-total" class="cart-shortcut-total">₦0</span>
-      </a>
+      <button class="cart-trigger" id="open-cart" type="button" aria-label="Open shopping cart, 0 items" aria-haspopup="dialog" aria-expanded="false">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.5L21 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg>
+        <span id="cart-shortcut-count" class="cart-shortcut-count" aria-hidden="true">0</span>
+      </button>
     </div>
     <header class="vendors-heading">
       <p class="vendors-label">CAMPUS BENEFIT MARKETPLACE</p>
@@ -29,8 +29,12 @@
         <div id="vendor-products-grid" class="vendor-products-grid"></div>
       </section>
 
-      <aside class="cart-panel" id="order-cart" hidden>
-        <h2>Your order cart <span id="cart-count">0</span></h2>
+      <div class="cart-backdrop" id="cart-backdrop" hidden></div>
+      <aside class="cart-panel" id="order-cart" role="dialog" aria-modal="true" aria-labelledby="cart-title" hidden>
+        <div class="cart-heading-row">
+          <h2 id="cart-title">Your cart <span id="cart-count">0</span></h2>
+          <button class="cart-close" id="close-cart" type="button" aria-label="Close shopping cart">×</button>
+        </div>
         <div id="cart-items" class="cart-items"></div>
         <p class="cart-total">Items: <strong id="cart-subtotal">₦0</strong></p>
         <p class="cart-total">Delivery: <strong id="cart-delivery-fee">₦0</strong></p>
@@ -45,7 +49,7 @@
           </select>
           <label for="delivery-note">Order note</label>
           <textarea id="delivery-note" rows="3" placeholder="Pickup or delivery details, size, flavour, etc."></textarea>
-          <button id="place-order" type="submit">Place order</button>
+          <button id="place-order" type="submit">Checkout</button>
           <p id="checkout-message" class="vendors-message" role="status"></p>
         </form>
         <p class="payment-note">Payment is arranged with the vendor after they receive your order.</p>

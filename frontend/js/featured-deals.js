@@ -89,6 +89,12 @@ async function loadFeaturedDeals() {
         link.textContent = "View deal";
         content.appendChild(link);
       }
+      const shopLink = document.createElement("a");
+      shopLink.className = "featured-deal-shop-link";
+      shopLink.href = `vendors.html?category=${encodeURIComponent(category)}`;
+      shopLink.setAttribute("aria-label", `Browse ${dealCategoryNames[category] || "vendor"} products to add to your cart`);
+      shopLink.innerHTML = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.5L21 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg><span>Browse products</span>';
+      content.appendChild(shopLink);
       card.appendChild(content);
       grid.appendChild(card);
     }

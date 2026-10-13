@@ -9,6 +9,9 @@
 .featured-deal-content .featured-deal-highlight { color: #1b6b3a; font-weight: 700; }
 .featured-deal-content .featured-deal-price { color: #071b3a; font-size: 18px; font-weight: 800; }
 .featured-deal-content a { display: inline-block; margin-top: 8px; padding: 10px 16px; border-radius: 8px; background: #1b6b3a; color: #fff; font-weight: 700; text-decoration: none; }
+.featured-deal-content .featured-deal-shop-link { display: inline-flex; width: fit-content; align-items: center; gap: 8px; margin-top: 14px; padding: 9px 13px; border: 1px solid #1b6b3a; border-radius: 999px; background: #fff; color: #1b6b3a; font-size: 14px; }
+.featured-deal-shop-link:hover { background: #eaf4ed; }
+.featured-deal-shop-link svg { width: 19px; height: 19px; }
 .featured-deal-content a:hover { background: #14552e; }
 [hidden] { display: none !important; }
 @media (max-width: 600px) { .featured-deals-grid { grid-template-columns: 1fr; } .featured-deal-card > img { max-height: 210px; } }

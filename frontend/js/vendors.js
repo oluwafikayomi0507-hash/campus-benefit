@@ -5,9 +5,9 @@ const cartSubtotalElement = document.querySelector("#cart-subtotal");
 const cartDeliveryElement = document.querySelector("#cart-delivery-fee");
 const cartTotalElement = document.querySelector("#cart-total");
 const cartCountElement = document.querySelector("#cart-count");
-const cartShortcutElement = document.querySelector(".cart-jump");
+const cartTrigger = document.querySelector("#open-cart");
+const cartBackdrop = document.querySelector("#cart-backdrop");
 const cartShortcutCountElement = document.querySelector("#cart-shortcut-count");
-const cartShortcutTotalElement = document.querySelector("#cart-shortcut-total");
 const cartPanelElement = document.querySelector("#order-cart");
 const checkoutMessage = document.querySelector("#checkout-message");
 const checkoutButton = document.querySelector("#place-order");
@@ -35,6 +35,29 @@ function readCart() {
 }
 
 let cart = readCart();
+
+function openCart() {
+  cartPanelElement.hidden = false;
+  cartBackdrop.hidden = false;
+  cartTrigger.setAttribute("aria-expanded", "true");
+  document.body.classList.add("cart-open");
+  document.querySelector("#close-cart").focus();
+}
+
+function closeCart() {
+  cartPanelElement.hidden = true;
+  cartBackdrop.hidden = true;
+  cartTrigger.setAttribute("aria-expanded", "false");
+  document.body.classList.remove("cart-open");
+  cartTrigger.focus();
+}
+
+cartTrigger.addEventListener("click", openCart);
+document.querySelector("#close-cart").addEventListener("click", closeCart);
+cartBackdrop.addEventListener("click", closeCart);
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !cartPanelElement.hidden) closeCart();
+});
 
 function saveCart() {
   localStorage.setItem(cartStorageKey, JSON.stringify(cart));
@@ -113,9 +136,17 @@ function renderProducts(products) {
       content.appendChild(description);
     }
     content.append(price, delivery);
+    const actions = document.createElement("div");
+    actions.className = "product-card-actions";
+    const addedFeedback = document.createElement("span");
+    addedFeedback.className = "added-feedback";
+    addedFeedback.setAttribute("role", "status");
     const addButton = document.createElement("button");
     addButton.type = "button";
-    addButton.textContent = "Add to cart";
+    addButton.className = "add-cart-icon";
+    addButton.setAttribute("aria-label", `Add ${product.product_name} to cart`);
+    addButton.title = "Add to cart";
+    addButton.innerHTML = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.5L21 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg>';
     addButton.addEventListener("click", () => {
       const existing = cart.find((item) => Number(item.productId) === Number(product.id));
       if (existing) existing.quantity += 1;
@@ -129,8 +160,11 @@ function renderProducts(products) {
         quantity: 1,
       });
       saveCart();
+      addedFeedback.textContent = "Added to cart";
+      window.setTimeout(() => { addedFeedback.textContent = ""; }, 2200);
     });
-    content.appendChild(addButton);
+    actions.append(addedFeedback, addButton);
+    content.appendChild(actions);
     card.appendChild(content);
     productsGrid.appendChild(card);
   }
@@ -195,12 +229,10 @@ function renderCart() {
     : Array.from(vendorFees.values()).reduce((sum, fee) => sum + fee, 0);
   cartCountElement.textContent = String(totalQuantity);
   if (cartShortcutCountElement) cartShortcutCountElement.textContent = String(totalQuantity);
-  if (cartShortcutElement) cartShortcutElement.hidden = cart.length === 0;
-  if (cartPanelElement) cartPanelElement.hidden = cart.length === 0;
+  cartTrigger.setAttribute("aria-label", `Open shopping cart, ${totalQuantity} ${totalQuantity === 1 ? "item" : "items"}`);
   cartSubtotalElement.textContent = money(itemSubtotal);
   cartDeliveryElement.textContent = money(deliveryTotal);
   cartTotalElement.textContent = money(itemSubtotal + deliveryTotal);
-  if (cartShortcutTotalElement) cartShortcutTotalElement.textContent = money(itemSubtotal + deliveryTotal);
   checkoutButton.disabled = cart.length === 0;
 }
 
