@@ -4,6 +4,7 @@ const requireAuth = require("../middlewares/auth.middleware");
 const createRateLimiter = require("../middlewares/rate-limit.middleware");
 const { requireVendor, getApprovedVendor } = require("./vendor.routes");
 const { getKeyMode, paystackRequest, finalizeMarketplacePayment, notifyMarketplaceVendors } = require("../services/paystack.service");
+const { studentCancellationConflict } = require("../services/order-policy");
 
 const router = express.Router();
 const productCategories = new Set(["food", "beauty", "fashion", "tech", "printing", "creative", "services"]);
@@ -417,14 +418,9 @@ router.post("/orders/:orderId/cancel", requireAuth, requireStudent, async (req, 
       [orderId, req.user.id]
     );
     if (!order.rowCount) return res.status(404).json({ message: "Order not found." });
-    if (order.rows[0].payment_status === "paid") {
-      return res.status(409).json({ message: "This order has been paid. Contact Campus Benefit support to review cancellation and refund options." });
-    }
-    if (order.rows[0].payment_status !== "not_required") {
-      return res.status(409).json({ message: "This order's payment is still being checked. Refresh My Orders before trying to cancel." });
-    }
-    if (!["pending", "accepted"].includes(order.rows[0].status)) {
-      return res.status(409).json({ message: "You can cancel an order only while it is pending or accepted, before preparation begins." });
+    const cancellationConflict = studentCancellationConflict(order.rows[0]);
+    if (cancellationConflict) {
+      return res.status(409).json({ message: cancellationConflict });
     }
 
     const cancelled = await pool.query(
