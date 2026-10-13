@@ -25,6 +25,9 @@
 .featured-vendor-container > section.featured-vendor-heading { cursor: default; }
 .featured-vendor-container > section.featured-vendor-heading::after { content: none; }
 .featured-vendor-count { flex: 0 0 auto; padding: 6px 11px; border-radius: 999px; background: #eaf4ed; color: #1b6b3a; font-size: 13px; font-weight: 700; }
+.featured-vendor-brand { display: inline-flex; min-width: 0; align-items: center; gap: 12px; }
+.featured-vendor-brand img { width: 54px; height: 54px; flex: 0 0 54px; border: 1px solid #f3d6d7; border-radius: 50%; object-fit: cover; }
+.featured-product-description { color: #626b65; font-size: 14px; line-height: 1.5; }
 .featured-vendor-ordering-note { margin: 0 24px 16px; padding: 12px 14px; border-radius: 10px; background: #fff8e8; color: #725617; font-size: 14px; line-height: 1.5; }
 .featured-vendor-products { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; padding: 0 20px 20px; }
 .featured-vendor-products .featured-deal-card { box-shadow: none; }
