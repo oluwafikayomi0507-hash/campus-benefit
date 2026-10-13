@@ -89,10 +89,22 @@ async function loadFeaturedDeals() {
       heading.className = "featured-vendor-heading";
       const vendorTitle = document.createElement("span");
       vendorTitle.textContent = name;
+      if (normalizeVendorName(name) === normalizeVendorName("Heesha’s Perfect Bitez")) {
+        const brand = document.createElement("span");
+        brand.className = "featured-vendor-brand";
+        const logo = document.createElement("img");
+        logo.src = "images/heesha-perfect-bitez-logo.jpeg";
+        logo.alt = "";
+        logo.loading = "lazy";
+        brand.append(logo, vendorTitle);
+        heading.appendChild(brand);
+      } else {
+        heading.appendChild(vendorTitle);
+      }
       const productCount = document.createElement("span");
       productCount.className = "featured-vendor-count";
       productCount.textContent = vendorDeals.length + (vendorDeals.length === 1 ? " item" : " items");
-      heading.append(vendorTitle, productCount);
+      heading.append(productCount);
       container.appendChild(heading);
 
       const sellerProducts = marketplaceProducts.filter((product) =>
@@ -153,6 +165,13 @@ async function loadFeaturedDeals() {
         const marketplaceProduct = sellerProducts.find((product) =>
           normalizeVendorName(product.product_name) === normalizeVendorName(deal.title)
         );
+        const productDescription = marketplaceProduct?.description || deal.description || "";
+        if (marketplaceProduct?.description && !deal.description) {
+          const description = document.createElement("p");
+          description.className = "featured-product-description";
+          description.textContent = marketplaceProduct.description;
+          content.insertBefore(description, content.querySelector(".featured-deal-price"));
+        }
         if (marketplaceProduct) {
           const addButton = document.createElement("button");
           addButton.type = "button";
@@ -165,7 +184,11 @@ async function loadFeaturedDeals() {
               if (Array.isArray(storedCart)) cart = storedCart;
             } catch { /* Start with an empty cart if saved cart data is invalid. */ }
             const existing = cart.find((item) => Number(item.productId) === Number(marketplaceProduct.id));
-            if (existing) existing.quantity += 1;
+            if (existing) {
+              existing.quantity += 1;
+              existing.description = productDescription;
+              existing.imageUrl = marketplaceProduct.image_url || deal.image_url || existing.imageUrl || "";
+            }
             else cart.push({
               productId: Number(marketplaceProduct.id),
               vendorId: Number(marketplaceProduct.vendor_id),
@@ -173,6 +196,8 @@ async function loadFeaturedDeals() {
               vendorName: marketplaceProduct.business_name,
               price: Number(marketplaceProduct.price),
               deliveryFee: Number(marketplaceProduct.delivery_fee || 0),
+              description: productDescription,
+              imageUrl: marketplaceProduct.image_url || deal.image_url || "",
               quantity: 1,
             });
             localStorage.setItem("campusBenefitCart", JSON.stringify(cart));
