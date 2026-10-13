@@ -201,6 +201,34 @@ async function notifyVendorOfNewOrder(email, orderId) {
   }
 }
 
+async function notifyVendorOfOrderCancellation(email, orderId, reason) {
+  if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) {
+    console.error("Vendor cancellation notification is not configured. Set RESEND_API_KEY and EMAIL_FROM.");
+    return;
+  }
+  const appBaseUrl = (process.env.APP_BASE_URL || "https://campusbenefit.com.ng").replace(/\/$/, "");
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: process.env.EMAIL_FROM,
+        to: [email],
+        subject: `Campus Benefit order #${orderId} was cancelled`,
+        text: `The student cancelled order #${orderId}. Reason: ${reason}\n\nView your vendor dashboard: ${appBaseUrl}/vendor-dashboard.html`,
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!response.ok) throw new Error(`Resend returned ${response.status}: ${await response.text()}`);
+  } catch (error) {
+    // Cancellation is already saved; email failure must not undo or hide it.
+    console.error("Could not send vendor cancellation notification:", error.message);
+  }
+}
+
 router.get("/products", requireAuth, requireStudent, async (req, res) => {
   const category = typeof req.query.category === "string" ? req.query.category.trim().toLowerCase() : "";
   if (category && !productCategories.has(category)) {
@@ -382,7 +410,10 @@ router.post("/orders/:orderId/cancel", requireAuth, requireStudent, async (req, 
 
   try {
     const order = await pool.query(
-      "SELECT status, payment_status FROM vendor_orders WHERE id = $1 AND student_id = $2",
+      `SELECT o.status, o.payment_status, v.email AS vendor_email
+       FROM vendor_orders o
+       JOIN vendors v ON v.id = o.vendor_id
+       WHERE o.id = $1 AND o.student_id = $2`,
       [orderId, req.user.id]
     );
     if (!order.rowCount) return res.status(404).json({ message: "Order not found." });
@@ -406,6 +437,7 @@ router.post("/orders/:orderId/cancel", requireAuth, requireStudent, async (req, 
     if (!cancelled.rowCount) {
       return res.status(409).json({ message: "The vendor updated this order at the same time. Refresh My Orders and check its status." });
     }
+    void notifyVendorOfOrderCancellation(order.rows[0].vendor_email, orderId, reason);
     return res.json({ message: "Your order was cancelled and the reason was saved.", order: cancelled.rows[0] });
   } catch (error) {
     console.error("Could not cancel student order:", error.message);
