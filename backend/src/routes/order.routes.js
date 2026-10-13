@@ -392,14 +392,14 @@ router.post("/orders/:orderId/cancel", requireAuth, requireStudent, async (req, 
     if (order.rows[0].payment_status !== "not_required") {
       return res.status(409).json({ message: "This order's payment is still being checked. Refresh My Orders before trying to cancel." });
     }
-    if (order.rows[0].status !== "pending") {
-      return res.status(409).json({ message: "You can cancel an order only before the vendor accepts it." });
+    if (!["pending", "accepted"].includes(order.rows[0].status)) {
+      return res.status(409).json({ message: "You can cancel an order only while it is pending or accepted, before preparation begins." });
     }
 
     const cancelled = await pool.query(
       `UPDATE vendor_orders
        SET status = 'cancelled', cancellation_reason = $1, cancelled_by = 'student', updated_at = NOW()
-       WHERE id = $2 AND student_id = $3 AND status = 'pending' AND payment_status = 'not_required'
+       WHERE id = $2 AND student_id = $3 AND status IN ('pending', 'accepted') AND payment_status = 'not_required'
        RETURNING id, status, cancellation_reason, cancelled_by`,
       [reason, orderId, req.user.id]
     );

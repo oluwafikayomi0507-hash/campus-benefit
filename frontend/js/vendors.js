@@ -283,7 +283,7 @@ async function loadStudentOrders() {
       const total = document.createElement("p");
       total.textContent = `Items ${money(order.item_subtotal)} + delivery ${money(order.delivery_fee)} = ${money(order.total_amount)}`;
       card.append(method, total);
-      if (order.status === "pending" && order.payment_status === "not_required") {
+      if (["pending", "accepted"].includes(order.status) && order.payment_status === "not_required") {
         const cancel = document.createElement("button");
         cancel.type = "button";
         cancel.className = "refresh-button";
