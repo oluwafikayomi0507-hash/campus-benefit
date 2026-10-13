@@ -270,6 +270,11 @@ router.post("/payout", requireAuth, requireVendor, limitPayoutSetup, async (req,
     return res.status(201).json({ payout: { ...saved.rows[0], payout_ready: true } });
   } catch (error) {
     console.error("Could not set up vendor payout:", error.message);
+    if (paymentMode === "test" && /test mode daily limit.*bank resolves/i.test(error.message)) {
+      return res.status(429).json({
+        message: "Paystack test mode has reached its daily limit for bank-account checks. No payout account was connected. Wait for the limit to reset or use Paystack-provided test details; keep live mode off while testing.",
+      });
+    }
     return res.status(error.status || 502).json({ message: "Could not verify or connect that payout account. Check the details or try again later." });
   }
 });
