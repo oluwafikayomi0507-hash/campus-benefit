@@ -289,25 +289,62 @@ async function loadStudentOrders() {
         cancel.className = "refresh-button";
         cancel.textContent = "Cancel order";
         cancel.addEventListener("click", async () => {
-          const enteredReason = window.prompt("Why do you need to cancel this order? A reason is required and will be saved.");
-          if (enteredReason === null) return;
-          const reason = enteredReason.trim();
-          if (!reason) {
-            window.alert("Enter a reason before cancelling this order.");
-            return;
-          }
-          cancel.disabled = true;
-          try {
-            await apiRequest(`/api/orders/${order.id}/cancel`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ reason }),
-            });
-            await loadStudentOrders();
-          } catch (error) {
-            window.alert(error.message);
-            cancel.disabled = false;
-          }
+          if (card.querySelector(".order-cancel-form")) return;
+          cancel.hidden = true;
+          const cancelForm = document.createElement("form");
+          cancelForm.className = "order-cancel-form";
+          const reasonLabel = document.createElement("label");
+          reasonLabel.textContent = "Why do you need to cancel?";
+          const reasonInput = document.createElement("textarea");
+          reasonInput.required = true;
+          reasonInput.maxLength = 1000;
+          reasonInput.rows = 3;
+          reasonInput.placeholder = "Enter a reason for the vendor";
+          const cancelError = document.createElement("p");
+          cancelError.className = "vendors-message";
+          cancelError.setAttribute("role", "status");
+          const confirmCancel = document.createElement("button");
+          confirmCancel.type = "submit";
+          confirmCancel.className = "refresh-button";
+          confirmCancel.textContent = "Confirm cancellation";
+          const keepOrder = document.createElement("button");
+          keepOrder.type = "button";
+          keepOrder.className = "refresh-button";
+          keepOrder.textContent = "Keep order";
+          keepOrder.addEventListener("click", () => {
+            cancelForm.remove();
+            cancel.hidden = false;
+            cancel.focus();
+          });
+          reasonLabel.appendChild(reasonInput);
+          cancelForm.append(reasonLabel, confirmCancel, keepOrder, cancelError);
+          cancelForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const reason = reasonInput.value.trim();
+            if (!reason) {
+              reasonInput.setCustomValidity("Enter a reason before cancelling this order.");
+              reasonInput.reportValidity();
+              return;
+            }
+            reasonInput.setCustomValidity("");
+            confirmCancel.disabled = true;
+            keepOrder.disabled = true;
+            cancelError.textContent = "Cancelling order...";
+            try {
+              await apiRequest(`/api/orders/${order.id}/cancel`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ reason }),
+              });
+              await loadStudentOrders();
+            } catch (error) {
+              cancelError.textContent = error.message;
+              confirmCancel.disabled = false;
+              keepOrder.disabled = false;
+            }
+          });
+          card.appendChild(cancelForm);
+          reasonInput.focus();
         });
         card.appendChild(cancel);
       } else if (order.payment_status === "paid" && order.status !== "completed" && order.status !== "cancelled") {

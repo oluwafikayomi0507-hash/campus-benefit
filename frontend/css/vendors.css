@@ -56,6 +56,10 @@ body.cart-open { overflow: hidden; }
 .student-order-card { padding: 16px; border: 1px solid #e5e9e6; border-radius: 12px; }
 .student-order-card h3 { margin: 0 0 8px; }
 .student-order-card p { color: #626b65; line-height: 1.5; }
+.order-cancel-form { display: grid; gap: 10px; margin-top: 12px; }
+.order-cancel-form label { display: grid; gap: 7px; color: var(--vendor-dark); font-weight: 700; }
+.order-cancel-form textarea { width: 100%; padding: 10px; border: 1px solid #d5ddd7; border-radius: 8px; font: inherit; resize: vertical; }
+.order-cancel-form button:disabled { cursor: wait; opacity: .6; }
 @media (max-width: 850px) { .vendors-layout { grid-template-columns: 1fr; } }
 @media (max-width: 600px) { .vendors-page { padding: 24px 5% 100px; } .vendors-topbar { align-items: flex-start; } .cart-trigger { top: auto; right: 18px; bottom: 18px; width: 58px; height: 58px; } .vendors-heading h1 { font-size: 31px; } .products-panel, .student-orders-panel { padding: 19px; } .cart-panel { border-radius: 18px 18px 0 0; top: auto; right: 0; bottom: 0; width: 100%; max-height: 88dvh; } }
 
