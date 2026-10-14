@@ -10,12 +10,14 @@ const router = express.Router();
 const allowedCategories = new Set(["food", "beauty", "fashion", "tech", "printing", "creative", "services"]);
 const clean = (value) => typeof value === "string" ? value.trim() : "";
 const limitListingCheckout = createRateLimiter({
+  name: "listing-checkout",
   windowMs: 10 * 60 * 1000,
   limit: 5,
   message: "Too many checkout attempts. Please wait 10 minutes before trying again.",
   keyGenerator: (req) => `vendor:${req.vendor.id}`,
 });
 const limitPaymentVerification = createRateLimiter({
+  name: "listing-payment-verification",
   windowMs: 60 * 1000,
   limit: 30,
   message: "Too many payment checks. Please wait a minute before trying again.",

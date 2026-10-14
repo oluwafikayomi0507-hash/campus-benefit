@@ -8,9 +8,9 @@ const { getKeyMode, paystackRequest } = require("../services/paystack.service");
 
 const router = express.Router();
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const limitVendorSignup = createRateLimiter({ windowMs: 60 * 60 * 1000, limit: 5, message: "Too many business application attempts. Please try again later." });
-const limitVendorLogin = createRateLimiter({ windowMs: 15 * 60 * 1000, limit: 10, message: "Too many login attempts. Please wait 15 minutes and try again." });
-const limitPayoutSetup = createRateLimiter({ windowMs: 60 * 60 * 1000, limit: 5, message: "Too many payout setup attempts. Please try again later.", keyGenerator: (req) => `vendor-payout:${req.user?.id || req.ip}` });
+const limitVendorSignup = createRateLimiter({ name: "vendor-signup", windowMs: 60 * 60 * 1000, limit: 5, message: "Too many business application attempts. Please try again later." });
+const limitVendorLogin = createRateLimiter({ name: "vendor-login", windowMs: 15 * 60 * 1000, limit: 10, message: "Too many login attempts. Please wait 15 minutes and try again." });
+const limitPayoutSetup = createRateLimiter({ name: "vendor-payout", windowMs: 60 * 60 * 1000, limit: 5, message: "Too many payout setup attempts. Please try again later.", keyGenerator: (req) => req.user?.id || req.ip });
 const clean = (value) => typeof value === "string" ? value.trim() : "";
 const payoutSetupEnabled = () => process.env.VENDOR_PAYOUT_SETUP_ENABLED === "true";
 
@@ -138,7 +138,7 @@ router.post("/auth/login", limitVendorLogin, async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT id, business_name, email, password_hash, is_approved,
+      `SELECT id, business_name, email, password_hash, auth_version, is_approved,
               approval_status, review_note
        FROM vendors WHERE email = $1`,
       [email]
@@ -156,7 +156,7 @@ router.post("/auth/login", limitVendorLogin, async (req, res) => {
     if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET is not configured");
 
     const token = jwt.sign(
-      { sub: String(vendor.id), role: "vendor" },
+      { sub: String(vendor.id), role: "vendor", av: Number(vendor.auth_version || 0) },
       process.env.JWT_SECRET,
       { algorithm: "HS256", expiresIn: "1h" }
     );

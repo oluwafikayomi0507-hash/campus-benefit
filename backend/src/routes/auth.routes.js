@@ -9,10 +9,10 @@ const createRateLimiter = require("../middlewares/rate-limit.middleware");
 const router = express.Router();
 const allowedLevels = new Set(["100", "200", "300", "400", "500", "600"]);
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const limitSignup = createRateLimiter({ windowMs: 60 * 60 * 1000, limit: 10, message: "Too many sign-up attempts. Please try again later." });
-const limitLogin = createRateLimiter({ windowMs: 15 * 60 * 1000, limit: 10, message: "Too many login attempts. Please wait 15 minutes and try again." });
-const limitPasswordReset = createRateLimiter({ windowMs: 15 * 60 * 1000, limit: 5, message: "Too many reset requests. Please wait 15 minutes and try again." });
-const limitPasswordResetSubmit = createRateLimiter({ windowMs: 15 * 60 * 1000, limit: 10, message: "Too many password reset attempts. Please wait and try again." });
+const limitSignup = createRateLimiter({ name: "student-signup", windowMs: 60 * 60 * 1000, limit: 10, message: "Too many sign-up attempts. Please try again later." });
+const limitLogin = createRateLimiter({ name: "student-login", windowMs: 15 * 60 * 1000, limit: 10, message: "Too many login attempts. Please wait 15 minutes and try again." });
+const limitPasswordReset = createRateLimiter({ name: "password-reset-request", windowMs: 15 * 60 * 1000, limit: 5, message: "Too many reset requests. Please wait 15 minutes and try again." });
+const limitPasswordResetSubmit = createRateLimiter({ name: "password-reset-submit", windowMs: 15 * 60 * 1000, limit: 10, message: "Too many password reset attempts. Please wait and try again." });
 
 function cleanText(value) {
   return typeof value === "string" ? value.trim() : "";
@@ -24,7 +24,7 @@ function createToken(user) {
   }
 
   return jwt.sign(
-    { sub: String(user.id), role: "student" },
+    { sub: String(user.id), role: "student", av: Number(user.auth_version || 0) },
     process.env.JWT_SECRET,
     { algorithm: "HS256", expiresIn: "1h" }
   );
@@ -113,7 +113,7 @@ router.post("/login", limitLogin, async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT id, full_name, email, password_hash, university, level
+      `SELECT id, full_name, email, password_hash, university, level, auth_version
        FROM users
        WHERE email = $1`,
       [email]
@@ -237,7 +237,7 @@ router.post("/reset-password", limitPasswordResetSubmit, async (req, res) => {
       await client.query("ROLLBACK");
       return res.status(400).json({ message: "This reset link is invalid or expired. Request a new one." });
     }
-    await client.query("UPDATE users SET password_hash = $1 WHERE id = $2", [passwordHash, reset.user_id]);
+    await client.query("UPDATE users SET password_hash = $1, auth_version = auth_version + 1 WHERE id = $2", [passwordHash, reset.user_id]);
     await client.query(
       "UPDATE password_reset_tokens SET used_at = NOW() WHERE user_id = $1 AND used_at IS NULL",
       [reset.user_id]

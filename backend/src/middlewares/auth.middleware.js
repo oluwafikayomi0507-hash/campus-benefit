@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
+const pool = require("../config/db");
 
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
   const cookieName = req.originalUrl.startsWith("/api/vendor/")
     ? "cb_vendor_session"
     : "cb_student_session";
@@ -29,9 +30,21 @@ function requireAuth(req, res, next) {
       return res.status(401).json({ message: "Please log in again." });
     }
 
+    const table = expectedRole === "vendor" ? "vendors" : "users";
+    const sessionResult = await pool.query(
+      `SELECT auth_version FROM ${table} WHERE id = $1`,
+      [payload.sub]
+    );
+    if (!sessionResult.rowCount || Number(sessionResult.rows[0].auth_version) !== Number(payload.av ?? 0)) {
+      return res.status(401).json({ message: "Your session is no longer valid. Please log in again." });
+    }
     req.user = { id: payload.sub, role: payload.role };
     return next();
-  } catch {
+  } catch (error) {
+    if (error.name !== "JsonWebTokenError" && error.name !== "TokenExpiredError" && error.name !== "NotBeforeError") {
+      console.error("Could not validate account session:", error.message);
+      return res.status(503).json({ message: "Authentication is temporarily unavailable. Please try again." });
+    }
     return res.status(401).json({
       message: "Your session is invalid or expired. Please log in again.",
     });

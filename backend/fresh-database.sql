@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
     university VARCHAR(180) NOT NULL,
     level VARCHAR(10) NOT NULL,
     is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+    auth_version INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -37,6 +38,7 @@ CREATE TABLE IF NOT EXISTS vendors (
     payout_bank_name VARCHAR(120),
     payout_account_name VARCHAR(160),
     payout_account_last4 CHAR(4),
+    auth_version INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -190,6 +192,13 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
     expires_at TIMESTAMPTZ NOT NULL,
     used_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS api_rate_limits (
+    rate_key TEXT NOT NULL,
+    window_started_at TIMESTAMPTZ NOT NULL,
+    hit_count INTEGER NOT NULL CHECK (hit_count > 0),
+    PRIMARY KEY (rate_key, window_started_at)
 );
 
 CREATE TABLE IF NOT EXISTS support_messages (

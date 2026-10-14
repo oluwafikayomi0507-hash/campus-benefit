@@ -9,6 +9,7 @@ const { studentCancellationConflict } = require("../services/order-policy");
 const router = express.Router();
 const productCategories = new Set(["food", "beauty", "fashion", "tech", "printing", "creative", "services"]);
 const limitStudentOrders = createRateLimiter({
+  name: "student-orders",
   windowMs: 60 * 60 * 1000,
   limit: 10,
   message: "Too many orders. Please wait an hour before placing another order.",

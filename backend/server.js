@@ -77,6 +77,16 @@ app.get("/api/health", (req, res) => {
   res.json({ message: "Campus Benefit API is running" });
 });
 
+app.get("/api/ready", async (req, res) => {
+  try {
+    await pool.query("SELECT 1");
+    return res.json({ message: "Campus Benefit API and database are ready" });
+  } catch (error) {
+    console.error("Readiness check failed:", error.message);
+    return res.status(503).json({ message: "Campus Benefit database is unavailable" });
+  }
+});
+
 app.get("/api/db-check", requireAuth, async (req, res) => {
   try {
     const result = await pool.query(

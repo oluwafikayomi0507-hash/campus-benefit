@@ -5,7 +5,7 @@ services:
     plan: free
     buildCommand: npm --prefix backend ci
     startCommand: npm --prefix backend start
-    healthCheckPath: /api/health
+    healthCheckPath: /api/ready
     envVars:
       - key: NODE_ENV
         value: production

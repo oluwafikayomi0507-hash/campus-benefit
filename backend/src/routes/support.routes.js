@@ -6,6 +6,7 @@ const createRateLimiter = require("../middlewares/rate-limit.middleware");
 const router = express.Router();
 const allowedTypes = new Set(["question", "problem", "suggestion", "complaint"]);
 const limitSupportMessages = createRateLimiter({
+  name: "support-messages",
   windowMs: 60 * 60 * 1000,
   limit: 5,
   message: "Too many support messages. Please wait an hour before sending another.",
