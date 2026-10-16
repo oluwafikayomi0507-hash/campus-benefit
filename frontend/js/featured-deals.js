@@ -11,6 +11,7 @@ function normalizeVendorName(name) {
     .trim()
     .toLocaleLowerCase()
     .replace(/[’‘`]/g, "'")
+    .replace(/'s\b/g, "")
     .replace(/\s+/g, " ");
 }
 
