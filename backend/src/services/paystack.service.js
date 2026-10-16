@@ -141,6 +141,11 @@ async function finalizeMarketplacePayment({ reference, amount, currency, domain,
        WHERE id = $1`,
       [payment.id, String(transactionId)]
     );
+    await client.query(
+      `UPDATE marketplace_dispatch_quotes SET status = 'paid', updated_at = NOW()
+       WHERE marketplace_payment_id = $1 AND status = 'checkout_pending'`,
+      [payment.id]
+    );
     const vendorIds = [...new Set(orderResult.rows.map((row) => row.vendor_id))];
     const vendors = await client.query(
       `SELECT id, email FROM vendors WHERE id = ANY($1::integer[])`, [vendorIds]

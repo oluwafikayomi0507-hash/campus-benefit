@@ -15,4 +15,6 @@
 .admin-opportunity-form input, .admin-opportunity-form select, .admin-opportunity-form textarea { width: 100%; box-sizing: border-box; padding: 11px 12px; border: 1px solid #d8e0da; border-radius: 8px; font: inherit; }
 .admin-opportunity-description { grid-column: 1 / -1; }
 .admin-opportunity-form button { justify-self: start; padding: 11px 16px; border: 0; border-radius: 8px; background: #1b6b3a; color: white; font: inherit; font-weight: 700; cursor: pointer; }
+.admin-application-card > input, .admin-application-card > label input { width: 100%; box-sizing: border-box; margin: 8px 0; padding: 11px 12px; border: 1px solid #d8e0da; border-radius: 8px; font: inherit; }
+.dashboard-panel > h3 { margin: 24px 0 8px; color: #071b3a; }
 @media (max-width: 640px) { .admin-opportunity-form { grid-template-columns: 1fr; } .admin-opportunity-description { grid-column: auto; } }

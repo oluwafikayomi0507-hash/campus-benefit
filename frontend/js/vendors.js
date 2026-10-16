@@ -13,6 +13,9 @@ const checkoutMessage = document.querySelector("#checkout-message");
 const checkoutButton = document.querySelector("#place-order");
 const deliveryMethodSelect = document.querySelector("#delivery-method");
 const studentOrdersElement = document.querySelector("#student-orders");
+const dispatchQuotesElement = document.querySelector("#dispatch-quotes");
+const deliveryAddressInput = document.querySelector("#delivery-address");
+const deliveryAddressLabel = document.querySelector("#delivery-address-label");
 const cartStorageKey = "campusBenefitCart";
 const categoryNames = {
   food: "Food & drinks",
@@ -126,7 +129,7 @@ function renderProducts(products) {
     price.textContent = money(product.price);
     const delivery = document.createElement("p");
     delivery.className = "vendor-product-description";
-    delivery.textContent = `Delivery: ${money(product.delivery_fee)} per order · Pickup is free`;
+    delivery.textContent = "Campus Benefit delivery fee is quoted by distance before payment · Pickup is free";
     content.append(name, category, vendor);
     if (vendorLocation.textContent) content.appendChild(vendorLocation);
     if (product.description) {
@@ -176,12 +179,9 @@ function renderCart() {
   cartItemsElement.replaceChildren();
   let totalQuantity = 0;
   let itemSubtotal = 0;
-  const vendorFees = new Map();
-
   cart.forEach((item, index) => {
     totalQuantity += item.quantity;
     itemSubtotal += item.price * item.quantity;
-    vendorFees.set(Number(item.vendorId), Number(item.deliveryFee || 0));
 
     const line = document.createElement("div");
     line.className = "cart-line";
@@ -246,16 +246,19 @@ function renderCart() {
     empty.textContent = "Your cart is empty.";
     cartItemsElement.appendChild(empty);
   }
-  const deliveryTotal = deliveryMethodSelect.value === "pickup"
-    ? 0
-    : Array.from(vendorFees.values()).reduce((sum, fee) => sum + fee, 0);
+  const deliveryTotal = 0;
   cartCountElement.textContent = String(totalQuantity);
   if (cartShortcutCountElement) cartShortcutCountElement.textContent = String(totalQuantity);
   cartTrigger.setAttribute("aria-label", `Open shopping cart, ${totalQuantity} ${totalQuantity === 1 ? "item" : "items"}`);
   cartSubtotalElement.textContent = money(itemSubtotal);
-  cartDeliveryElement.textContent = money(deliveryTotal);
+  cartDeliveryElement.textContent = deliveryMethodSelect.value === "pickup" ? money(0) : "Quoted before payment";
   cartTotalElement.textContent = money(itemSubtotal + deliveryTotal);
   checkoutButton.disabled = cart.length === 0;
+  const deliverySelected = deliveryMethodSelect.value === "delivery";
+  deliveryAddressInput.required = deliverySelected;
+  deliveryAddressInput.hidden = !deliverySelected;
+  deliveryAddressLabel.hidden = !deliverySelected;
+  checkoutButton.textContent = deliverySelected ? "Request delivery quote" : "Checkout with Paystack";
 }
 
 async function loadProducts() {
@@ -305,6 +308,16 @@ async function loadStudentOrders() {
       const total = document.createElement("p");
       total.textContent = `Items ${money(order.item_subtotal)} + delivery ${money(order.delivery_fee)} = ${money(order.total_amount)}`;
       card.append(method, total);
+      if (order.dispatch_status && order.dispatch_status !== "not_requested") {
+        const dispatch = document.createElement("p");
+        dispatch.textContent = `Campus Benefit delivery: ${order.dispatch_status.replaceAll("_", " ")}`;
+        card.appendChild(dispatch);
+        if (order.rider_name) {
+          const rider = document.createElement("p");
+          rider.textContent = `Rider: ${order.rider_name} · ${order.rider_phone}`;
+          card.appendChild(rider);
+        }
+      }
       if (["pending", "accepted"].includes(order.status) && order.payment_status === "not_required") {
         const cancel = document.createElement("button");
         cancel.type = "button";
@@ -381,7 +394,60 @@ async function loadStudentOrders() {
   }
 }
 
- deliveryMethodSelect.addEventListener("change", renderCart);
+async function loadDispatchQuotes() {
+  try {
+    const quotes = await apiRequest("/api/dispatch/quotes/mine");
+    dispatchQuotesElement.replaceChildren();
+    for (const quote of quotes) {
+      const card = document.createElement("article");
+      card.className = "student-order-card";
+      const heading = document.createElement("h3");
+      heading.textContent = `Campus Benefit delivery · ${quote.status.replaceAll("_", " ")}`;
+      const business = document.createElement("p");
+      business.textContent = quote.business_name;
+      card.append(heading, business);
+      if (quote.quoted_fee !== null) {
+        const fee = document.createElement("p");
+        fee.textContent = `Dispatch fee: ${money(quote.quoted_fee)}`;
+        card.appendChild(fee);
+      }
+      if (quote.rider_name) {
+        const rider = document.createElement("p");
+        rider.textContent = `Rider: ${quote.rider_name} · ${quote.rider_phone}`;
+        card.appendChild(rider);
+      }
+      if (["paid", "assigned", "picked_up", "delivered"].includes(quote.status)) {
+        const delivery = document.createElement("p");
+        delivery.textContent = `Delivery status: ${quote.status.replaceAll("_", " ")}`;
+        card.appendChild(delivery);
+      }
+      if (["quoted", "checkout_pending"].includes(quote.status)) {
+        const pay = document.createElement("button");
+        pay.type = "button";
+        pay.className = "refresh-button";
+        pay.textContent = quote.status === "checkout_pending"
+          ? "Continue Paystack checkout"
+          : `Pay dispatch fee and order total · ${money(quote.quoted_fee)}`;
+        pay.addEventListener("click", async () => {
+          pay.disabled = true;
+          try {
+            const checkout = await apiRequest(`/api/dispatch/quotes/${quote.id}/pay`, { method: "POST" });
+            window.location.assign(checkout.authorizationUrl);
+          } catch (error) {
+            checkoutMessage.textContent = error.message;
+            pay.disabled = false;
+          }
+        });
+        card.appendChild(pay);
+      }
+      dispatchQuotesElement.appendChild(card);
+    }
+  } catch (error) {
+    dispatchQuotesElement.textContent = error.message;
+  }
+}
+
+deliveryMethodSelect.addEventListener("change", renderCart);
 
 document.querySelector("#checkout-form")?.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -395,6 +461,31 @@ document.querySelector("#checkout-form")?.addEventListener("submit", async (even
   }
 
   try {
+    if (deliveryMethodSelect.value === "delivery") {
+      if (groupedOrders.size !== 1) {
+        checkoutMessage.textContent = "Campus Benefit delivery quotes currently cover one vendor per order. Remove items from other vendors and request a separate quote.";
+        checkoutButton.disabled = cart.length === 0;
+        return;
+      }
+      const result = await apiRequest("/api/dispatch/quotes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orders: Array.from(groupedOrders, ([vendorId, items]) => ({ vendorId, items })),
+          customerPhone: document.querySelector("#customer-phone").value.trim(),
+          deliveryAddress: deliveryAddressInput.value.trim(),
+          deliveryNote: document.querySelector("#delivery-note").value.trim(),
+        }),
+      });
+      cart = [];
+      saveCart();
+      deliveryAddressInput.value = "";
+      document.querySelector("#delivery-note").value = "";
+      checkoutMessage.textContent = result.message;
+      await loadDispatchQuotes();
+      checkoutButton.disabled = true;
+      return;
+    }
     const result = await apiRequest("/api/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -414,6 +505,7 @@ document.querySelector("#checkout-form")?.addEventListener("submit", async (even
     cart = [];
     saveCart();
     document.querySelector("#delivery-note").value = "";
+    deliveryAddressInput.value = "";
     checkoutMessage.textContent = `Order sent. Total: ${money(grandTotal)}. Check My Orders below for updates.`;
     await loadStudentOrders();
   } catch (error) {
@@ -423,6 +515,7 @@ document.querySelector("#checkout-form")?.addEventListener("submit", async (even
 });
 
 document.querySelector("#refresh-orders")?.addEventListener("click", loadStudentOrders);
+document.querySelector("#refresh-orders")?.addEventListener("click", loadDispatchQuotes);
 
 async function verifyMarketplacePaymentFromReturn() {
   const url = new URL(window.location.href);
@@ -441,6 +534,7 @@ async function verifyMarketplacePaymentFromReturn() {
       document.querySelector("#delivery-note").value = "";
       checkoutMessage.textContent = result.message;
       await loadStudentOrders();
+      await loadDispatchQuotes();
     } else {
       checkoutMessage.textContent = result.message;
     }
@@ -457,4 +551,5 @@ async function verifyMarketplacePaymentFromReturn() {
 renderCart();
 loadProducts();
 loadStudentOrders();
+loadDispatchQuotes();
 verifyMarketplacePaymentFromReturn();

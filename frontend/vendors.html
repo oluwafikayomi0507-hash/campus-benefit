@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Campus Benefit Vendors</title>
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/vendors.css?v=heesha-cart-details-4">
+  <link rel="stylesheet" href="css/vendors.css?v=campus-dispatch-1">
 </head>
 <body>
   <main class="vendors-page">
@@ -47,12 +47,14 @@
             <option value="delivery">Delivery</option>
             <option value="pickup">Pickup (no delivery fee)</option>
           </select>
+          <label for="delivery-address" id="delivery-address-label">Delivery address</label>
+          <textarea id="delivery-address" rows="3" maxlength="500" placeholder="Campus, building, street, and directions" required></textarea>
           <label for="delivery-note">Order note</label>
           <textarea id="delivery-note" rows="3" placeholder="Pickup or delivery details, size, flavour, etc."></textarea>
           <button id="place-order" type="submit">Checkout</button>
           <p id="checkout-message" class="vendors-message" role="status"></p>
         </form>
-        <p class="payment-note">Payment is arranged with the vendor after they receive your order.</p>
+        <p class="payment-note">For delivery, Campus Benefit confirms a distance-based rider fee before you pay.</p>
       </aside>
     </div>
 
@@ -62,9 +64,10 @@
         <button id="refresh-orders" class="refresh-button" type="button">Refresh</button>
       </div>
       <div id="student-orders" class="student-orders-list"></div>
+      <div id="dispatch-quotes" class="student-orders-list" aria-live="polite"></div>
     </section>
   </main>
-  <script src="js/vendors.js?v=heesha-cart-details-4"></script>
+  <script src="js/vendors.js?v=campus-dispatch-1"></script>
   <script src="js/auth-guard.js"></script>
 </body>
 </html>

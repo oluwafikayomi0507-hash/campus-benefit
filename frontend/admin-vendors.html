@@ -21,6 +21,17 @@
     </section>
     <section class="dashboard-panel">
       <div class="admin-heading-row">
+        <h2>Campus Benefit dispatch</h2>
+        <button id="refresh-dispatch" class="admin-secondary" type="button">Refresh</button>
+      </div>
+      <p id="dispatch-admin-status" role="status">Review delivery addresses, quote distance-based fees, and assign riders after orders are paid and ready.</p>
+      <h3>Quote requests</h3>
+      <div id="dispatch-quote-requests" class="admin-application-list"></div>
+      <h3>Ready deliveries</h3>
+      <div id="dispatch-active-jobs" class="admin-application-list"></div>
+    </section>
+    <section class="dashboard-panel">
+      <div class="admin-heading-row">
         <h2>Waiting for review</h2>
         <button id="refresh-applications" class="admin-secondary" type="button">Refresh</button>
       </div>
@@ -71,5 +82,6 @@
   <script src="js/admin-vendors.js"></script>
   <script src="js/admin-opportunities.js"></script>
   <script src="js/admin-deals.js?v=2"></script>
+  <script src="js/admin-dispatch.js?v=campus-dispatch-1"></script>
 </body>
 </html>

@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS vendor_orders (
     vendor_id INTEGER NOT NULL REFERENCES vendors(id) ON DELETE RESTRICT,
     customer_phone VARCHAR(30),
     delivery_note TEXT,
+    delivery_address TEXT,
     status VARCHAR(20) NOT NULL DEFAULT 'pending'
         CHECK (status IN ('pending', 'accepted', 'preparing', 'ready', 'completed', 'cancelled')),
     delivery_method VARCHAR(20) NOT NULL DEFAULT 'delivery'
@@ -70,6 +71,8 @@ CREATE TABLE IF NOT EXISTS vendor_orders (
     payment_status VARCHAR(20) NOT NULL DEFAULT 'not_required'
         CHECK (payment_status IN ('not_required', 'pending', 'paid', 'failed')),
     marketplace_payment_id BIGINT,
+    dispatch_status VARCHAR(24) NOT NULL DEFAULT 'not_requested'
+        CHECK (dispatch_status IN ('not_requested', 'awaiting_assignment', 'assigned', 'picked_up', 'delivered')),
     cancellation_reason TEXT,
     cancelled_by VARCHAR(10) CHECK (cancelled_by IN ('student', 'vendor')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -88,9 +91,30 @@ CREATE TABLE IF NOT EXISTS marketplace_payments (
     status VARCHAR(20) NOT NULL DEFAULT 'pending'
         CHECK (status IN ('pending', 'paid', 'failed', 'cancelled')),
     paystack_transaction_id TEXT,
+    authorization_url TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     paid_at TIMESTAMPTZ
 );
+CREATE TABLE IF NOT EXISTS marketplace_dispatch_quotes (
+    id BIGSERIAL PRIMARY KEY,
+    student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    vendor_id INTEGER NOT NULL REFERENCES vendors(id) ON DELETE RESTRICT,
+    customer_phone VARCHAR(30) NOT NULL,
+    delivery_address TEXT NOT NULL,
+    delivery_note TEXT,
+    cart_items JSONB NOT NULL CHECK (jsonb_typeof(cart_items) = 'array'),
+    status VARCHAR(24) NOT NULL DEFAULT 'pending_quote'
+        CHECK (status IN ('pending_quote', 'quoted', 'checkout_pending', 'paid', 'assigned', 'picked_up', 'delivered', 'cancelled')),
+    quoted_fee NUMERIC(10, 2) CHECK (quoted_fee IS NULL OR quoted_fee >= 0),
+    quoted_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    marketplace_payment_id BIGINT REFERENCES marketplace_payments(id) ON DELETE RESTRICT,
+    rider_name VARCHAR(160),
+    rider_phone VARCHAR(30),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS marketplace_dispatch_payment_unique_idx
+    ON marketplace_dispatch_quotes(marketplace_payment_id) WHERE marketplace_payment_id IS NOT NULL;
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'vendor_orders_marketplace_payment_fk') THEN
         ALTER TABLE vendor_orders ADD CONSTRAINT vendor_orders_marketplace_payment_fk

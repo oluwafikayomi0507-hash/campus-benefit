@@ -44,3 +44,7 @@ Password reset email delivery requires a verified sending domain in Resend. Once
 New vendor applications send a notification email to the email addresses of users marked as administrators. This uses the same `RESEND_API_KEY` and `EMAIL_FROM` settings. Email delivery is best-effort; applications remain available for review on the Admin page if a notification cannot be sent.
 
 New marketplace orders send a short email notification to the affected vendor after the order transaction commits. The email links to the vendor dashboard and does not include student contact details. If email delivery fails, the order remains saved and can still be viewed in the dashboard. The dashboard also refreshes the order inbox every 60 seconds while it is open.
+
+## Campus Benefit dispatch
+
+For an existing database, run `dispatch-system.sql` after `marketplace-payments.sql` and before deploying the dispatch routes. It adds delivery addresses and statuses, stores the Paystack checkout URL so students can resume payment, and creates the Campus Benefit distance-quote and rider queue. Students request a quote for one vendor at a time; an administrator sets the fee from the Admin page before the student can pay. The dispatch team assigns a rider after the vendor marks the order ready, then records pickup and delivery from the same Admin page. Fresh databases get the same schema from `fresh-database.sql`.
