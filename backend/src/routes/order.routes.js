@@ -29,7 +29,7 @@ const commissionRate = () => {
   return Number.isFinite(value) && value >= 0 && value <= 20 ? value : 5;
 };
 
-async function createMarketplaceCheckout(req, groups, { customerPhone, deliveryNote, deliveryMethod, deliveryAddress = "", dispatchFee = null, dispatchQuoteId = null }) {
+async function createMarketplaceCheckout(req, groups, { customerPhone, deliveryNote, deliveryMethod, deliveryAddress = "" }) {
   const paymentMode = getKeyMode();
   if (!paymentMode) {
     const error = new Error("Online payments are temporarily unavailable. Please try again later.");
@@ -68,10 +68,10 @@ async function createMarketplaceCheckout(req, groups, { customerPhone, deliveryN
       }
       const itemSubtotalKobo = products.rows.reduce((sum, product) =>
         sum + Math.round(Number(product.price) * 100) * group.quantities.get(Number(product.id)), 0);
-      const deliveryKobo = deliveryMethod === "pickup" ? 0 : Math.round(Number(dispatchFee ?? vendor.delivery_fee) * 100);
+      const deliveryKobo = deliveryMethod === "pickup" ? 0 : Math.round(Number(vendor.delivery_fee) * 100);
       const vendorCommissionKobo = Math.round(itemSubtotalKobo * commissionRate() / 100);
       orderData.push({ group, products: products.rows, vendor, itemSubtotalKobo, deliveryKobo,
-        vendorShareKobo: itemSubtotalKobo - vendorCommissionKobo + (dispatchFee === null ? deliveryKobo : 0) });
+        vendorShareKobo: itemSubtotalKobo - vendorCommissionKobo + deliveryKobo });
     }
     const subtotalKobo = orderData.reduce((sum, order) => sum + order.itemSubtotalKobo, 0);
     const deliveryTotalKobo = orderData.reduce((sum, order) => sum + order.deliveryKobo, 0);
@@ -92,32 +92,18 @@ async function createMarketplaceCheckout(req, groups, { customerPhone, deliveryN
       [req.user.id, reference, amountKobo, subtotalKobo / 100, deliveryTotalKobo / 100, platformFeeKobo / 100, paymentMode]
     );
     paymentId = payment.rows[0].id;
-    if (dispatchQuoteId) {
-      const linkedQuote = await client.query(
-        `UPDATE marketplace_dispatch_quotes
-         SET marketplace_payment_id = $1, status = 'checkout_pending', updated_at = NOW()
-         WHERE id = $2 AND student_id = $3 AND status = 'quoted' AND marketplace_payment_id IS NULL
-         RETURNING id`,
-        [paymentId, dispatchQuoteId, req.user.id]
-      );
-      if (!linkedQuote.rowCount) {
-        const error = new Error("This delivery quote already has a checkout in progress. Refresh your delivery updates.");
-        error.status = 409;
-        throw error;
-      }
-    }
     for (const order of orderData) {
       const orderSubtotal = order.itemSubtotalKobo / 100;
       const delivery = order.deliveryKobo / 100;
       const created = await client.query(
         `INSERT INTO vendor_orders
            (student_id, vendor_id, customer_phone, delivery_note, delivery_method, delivery_address,
-            item_subtotal, delivery_fee, total_amount, payment_status, marketplace_payment_id, dispatch_status)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending', $10, $11)
+            item_subtotal, delivery_fee, total_amount, payment_status, marketplace_payment_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending', $10)
          RETURNING id`,
         [req.user.id, order.group.vendorId, customerPhone || null, deliveryNote || null,
           deliveryMethod, deliveryAddress || null, orderSubtotal, delivery, orderSubtotal + delivery,
-          paymentId, dispatchQuoteId ? "awaiting_assignment" : "not_requested"]
+          paymentId]
       );
       order.orderId = created.rows[0].id;
       for (const product of order.products) {
@@ -146,7 +132,7 @@ async function createMarketplaceCheckout(req, groups, { customerPhone, deliveryN
         currency: "NGN",
         reference,
         callback_url: `${(process.env.APP_BASE_URL || "https://campusbenefit.com.ng").replace(/\/$/, "")}/vendors.html?order_payment=1`,
-        metadata: { purpose: "marketplace_order", payment_id: paymentId, ...(dispatchQuoteId ? { dispatch_quote_id: dispatchQuoteId } : {}) },
+        metadata: { purpose: "marketplace_order", payment_id: paymentId },
         split: {
           type: "flat",
           bearer_type: "all-proportional",
@@ -163,7 +149,7 @@ async function createMarketplaceCheckout(req, groups, { customerPhone, deliveryN
       itemSubtotal: checkoutTotals.subtotal,
       deliveryTotal: checkoutTotals.delivery,
       commissionPercent: commissionRate(),
-      platformShare: checkoutTotals.platformFee + (dispatchFee === null ? 0 : checkoutTotals.delivery),
+      platformShare: checkoutTotals.platformFee,
     };
   } catch (error) {
     await pool.query(
@@ -173,13 +159,6 @@ async function createMarketplaceCheckout(req, groups, { customerPhone, deliveryN
       `UPDATE vendor_orders SET payment_status = 'failed', status = 'cancelled', updated_at = NOW()
        WHERE marketplace_payment_id = $1 AND payment_status = 'pending'`, [paymentId]
     ).catch(() => {});
-    if (dispatchQuoteId) {
-      await pool.query(
-        `UPDATE marketplace_dispatch_quotes SET status = 'quoted', marketplace_payment_id = NULL, updated_at = NOW()
-         WHERE id = $1 AND marketplace_payment_id = $2 AND status = 'checkout_pending'`,
-        [dispatchQuoteId, paymentId]
-      ).catch(() => {});
-    }
     throw error;
   }
 }
@@ -352,8 +331,7 @@ router.get("/vendor/orders", requireAuth, requireVendor, requireApprovedVendor, 
     const result = await pool.query(
       `SELECT o.id, o.student_id, o.customer_phone, o.delivery_note, o.delivery_method,
               o.item_subtotal, o.delivery_fee, o.total_amount, o.status, o.payment_status,
-              o.delivery_address, o.dispatch_status,
-              dq.rider_name, dq.rider_phone,
+              o.delivery_address,
               o.cancellation_reason, o.cancelled_by, o.created_at,
               u.full_name AS student_name, u.email AS student_email,
               COALESCE(json_agg(json_build_object(
@@ -363,10 +341,9 @@ router.get("/vendor/orders", requireAuth, requireVendor, requireApprovedVendor, 
               )) FILTER (WHERE oi.id IS NOT NULL), '[]'::json) AS items
        FROM vendor_orders o
        JOIN users u ON u.id = o.student_id
-       LEFT JOIN marketplace_dispatch_quotes dq ON dq.marketplace_payment_id = o.marketplace_payment_id
        LEFT JOIN vendor_order_items oi ON oi.order_id = o.id
        WHERE o.vendor_id = $1 AND o.payment_status <> 'pending'
-       GROUP BY o.id, u.full_name, u.email, dq.rider_name, dq.rider_phone
+       GROUP BY o.id, u.full_name, u.email
        ORDER BY o.created_at DESC`,
       [req.vendor.id]
     );
@@ -398,15 +375,12 @@ router.patch("/vendor/orders/:orderId/status", requireAuth, requireVendor, requi
 
   try {
     const current = await pool.query(
-      "SELECT status, payment_status, dispatch_status FROM vendor_orders WHERE id = $1 AND vendor_id = $2 AND payment_status <> 'pending'",
+      "SELECT status, payment_status FROM vendor_orders WHERE id = $1 AND vendor_id = $2 AND payment_status <> 'pending'",
       [orderId, req.vendor.id]
     );
     if (!current.rowCount) return res.status(404).json({ message: "Order not found." });
     if (status === "cancelled" && current.rows[0].payment_status === "paid") {
       return res.status(409).json({ message: "This order has been paid. Contact Campus Benefit support to review cancellation and refund options." });
-    }
-    if (status === "completed" && current.rows[0].dispatch_status !== "not_requested") {
-      return res.status(409).json({ message: "Campus Benefit dispatch will mark this order complete after the rider delivers it." });
     }
     if (!transitions[current.rows[0].status]?.includes(status)) {
       return res.status(409).json({ message: `Order cannot move from ${current.rows[0].status} to ${status}.` });
@@ -471,121 +445,24 @@ router.post("/orders/:orderId/cancel", requireAuth, requireStudent, async (req, 
   }
 });
 
-router.post("/dispatch/quotes", requireAuth, requireStudent, limitStudentOrders, async (req, res) => {
-  const customerPhone = typeof req.body?.customerPhone === "string" ? req.body.customerPhone.trim() : "";
-  const deliveryAddress = typeof req.body?.deliveryAddress === "string" ? req.body.deliveryAddress.trim() : "";
-  const deliveryNote = typeof req.body?.deliveryNote === "string" ? req.body.deliveryNote.trim() : "";
-  const rawGroups = Array.isArray(req.body?.orders) ? req.body.orders : [];
-  if (!customerPhone || customerPhone.length > 30 || !deliveryAddress || deliveryAddress.length > 500 || deliveryNote.length > 1000) {
-    return res.status(400).json({ message: "Enter a phone number and delivery address. Keep delivery instructions under 1,000 characters." });
-  }
-  if (rawGroups.length !== 1 || !Array.isArray(rawGroups[0]?.items) || rawGroups[0].items.length < 1 || rawGroups[0].items.length > 50) {
-    return res.status(400).json({ message: "Request a distance quote for one vendor at a time. Separate vendor orders into separate checkouts." });
-  }
-  const vendorId = Number(rawGroups[0].vendorId);
-  const items = [];
-  for (const item of rawGroups[0].items) {
-    const productId = Number(item?.productId);
-    const quantity = Number(item?.quantity);
-    if (!Number.isSafeInteger(productId) || productId < 1 || !Number.isSafeInteger(quantity) || quantity < 1 || quantity > 50) {
-      return res.status(400).json({ message: "One or more cart items are invalid." });
-    }
-    items.push({ productId, quantity });
-  }
-  if (!Number.isSafeInteger(vendorId) || vendorId < 1 || !marketplacePaymentsEnabled()) {
-    return res.status(503).json({ message: "Campus Benefit dispatch quotes are temporarily unavailable." });
-  }
-  try {
-    const available = await pool.query(
-      `SELECT p.id FROM vendor_products p JOIN vendors v ON v.id = p.vendor_id
-       WHERE p.id = ANY($1::integer[]) AND p.vendor_id = $2 AND p.is_available = TRUE
-         AND v.is_approved = TRUE AND v.approval_status = 'approved'`,
-      [items.map((item) => item.productId), vendorId]
-    );
-    if (available.rowCount !== items.length) return res.status(400).json({ message: "One or more products are unavailable. Refresh your cart and try again." });
-    const result = await pool.query(
-      `INSERT INTO marketplace_dispatch_quotes
-         (student_id, vendor_id, customer_phone, delivery_address, delivery_note, cart_items)
-       VALUES ($1, $2, $3, $4, $5, $6::jsonb)
-       RETURNING id, status, created_at`,
-      [req.user.id, vendorId, customerPhone, deliveryAddress, deliveryNote || null, JSON.stringify(items)]
-    );
-    return res.status(201).json({ message: "Dispatch quote requested. Campus Benefit will review the distance and send the fee before you pay.", quote: result.rows[0] });
-  } catch (error) {
-    console.error("Could not request dispatch quote:", error.message);
-    return res.status(500).json({ message: "Could not request a dispatch quote." });
-  }
-});
-
-router.get("/dispatch/quotes/mine", requireAuth, requireStudent, async (req, res) => {
-  try {
-    const result = await pool.query(
-      `SELECT q.id, q.status, q.quoted_fee, q.delivery_address, q.created_at, q.updated_at,
-              q.rider_name, q.rider_phone, v.business_name,
-              o.id AS order_id, o.status AS order_status
-       FROM marketplace_dispatch_quotes q
-       JOIN vendors v ON v.id = q.vendor_id
-       LEFT JOIN marketplace_payments p ON p.id = q.marketplace_payment_id
-       LEFT JOIN vendor_orders o ON o.marketplace_payment_id = p.id
-       WHERE q.student_id = $1
-       ORDER BY q.created_at DESC LIMIT 20`,
-      [req.user.id]
-    );
-    return res.json(result.rows);
-  } catch (error) {
-    console.error("Could not load dispatch quotes:", error.message);
-    return res.status(500).json({ message: "Could not load delivery updates." });
-  }
-});
-
-router.post("/dispatch/quotes/:quoteId/pay", requireAuth, requireStudent, limitStudentOrders, async (req, res) => {
-  const quoteId = Number(req.params.quoteId);
-  if (!Number.isSafeInteger(quoteId) || quoteId < 1) return res.status(400).json({ message: "Choose a valid delivery quote." });
-  try {
-    const result = await pool.query(
-      `SELECT id, vendor_id, customer_phone, delivery_address, delivery_note, cart_items, quoted_fee,
-              status, marketplace_payment_id
-       FROM marketplace_dispatch_quotes
-       WHERE id = $1 AND student_id = $2 AND status IN ('quoted', 'checkout_pending') AND quoted_fee IS NOT NULL`,
-      [quoteId, req.user.id]
-    );
-    if (!result.rowCount) return res.status(409).json({ message: "This delivery quote is no longer available. Refresh delivery updates." });
-    const quote = result.rows[0];
-    if (quote.status === "checkout_pending") {
-      const pendingPayment = await pool.query(
-        "SELECT authorization_url FROM marketplace_payments WHERE id = $1 AND student_id = $2 AND status = 'pending'",
-        [quote.marketplace_payment_id, req.user.id]
-      );
-      if (pendingPayment.rows[0]?.authorization_url) return res.json({ authorizationUrl: pendingPayment.rows[0].authorization_url });
-      return res.status(409).json({ message: "Paystack is still preparing this checkout. Refresh delivery updates in a moment." });
-    }
-    const quantities = new Map(quote.cart_items.map((item) => [Number(item.productId), Number(item.quantity)]));
-    const checkout = await createMarketplaceCheckout(req, [{ vendorId: Number(quote.vendor_id), quantities }], {
-      customerPhone: quote.customer_phone,
-      deliveryNote: quote.delivery_note,
-      deliveryAddress: quote.delivery_address,
-      deliveryMethod: "delivery",
-      dispatchFee: Number(quote.quoted_fee),
-      dispatchQuoteId: quote.id,
-    });
-    return res.json(checkout);
-  } catch (error) {
-    console.error("Could not prepare dispatch checkout:", error.message);
-    return res.status(error.status || 502).json({ message: error.status ? error.message : "Could not prepare secure checkout. Please try again." });
-  }
-});
-
 router.post("/orders", requireAuth, requireStudent, limitStudentOrders, async (req, res) => {
   const body = req.body ?? {};
   const customerPhone = typeof body.customerPhone === "string" ? body.customerPhone.trim() : "";
   const deliveryNote = typeof body.deliveryNote === "string" ? body.deliveryNote.trim() : "";
   const deliveryMethod = body.deliveryMethod;
+  const deliveryAddress = typeof body.deliveryAddress === "string" ? body.deliveryAddress.trim() : "";
   const rawGroups = Array.isArray(body.orders)
     ? body.orders
     : [{ vendorId: body.vendorId, items: body.items }];
 
   if (!["delivery", "pickup"].includes(deliveryMethod)) {
     return res.status(400).json({ message: "Choose delivery or pickup." });
+  }
+  if (deliveryMethod === "delivery" && (!deliveryAddress || deliveryAddress.length > 500)) {
+    return res.status(400).json({ message: "Enter a delivery address up to 500 characters." });
+  }
+  if (deliveryNote.length > 1000) {
+    return res.status(400).json({ message: "Keep order notes under 1,000 characters." });
   }
   if (rawGroups.length === 0 || rawGroups.length > 20) {
     return res.status(400).json({ message: "Your cart must contain products from at least one vendor." });
@@ -626,7 +503,7 @@ router.post("/orders", requireAuth, requireStudent, limitStudentOrders, async (r
 
   if (marketplacePaymentsEnabled()) {
     try {
-      const checkout = await createMarketplaceCheckout(req, groups, { customerPhone, deliveryNote, deliveryMethod });
+      const checkout = await createMarketplaceCheckout(req, groups, { customerPhone, deliveryNote, deliveryMethod, deliveryAddress });
       return res.status(201).json({
         message: "Your secure payment is ready. Complete it on Paystack to send your order to the vendor.",
         ...checkout,
@@ -667,13 +544,13 @@ router.post("/orders", requireAuth, requireStudent, limitStudentOrders, async (r
       const totalAmount = itemSubtotal + deliveryFee;
       const orderResult = await client.query(
         `INSERT INTO vendor_orders
-           (student_id, vendor_id, customer_phone, delivery_note, delivery_method,
+           (student_id, vendor_id, customer_phone, delivery_note, delivery_method, delivery_address,
             item_subtotal, delivery_fee, total_amount)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
          RETURNING id, vendor_id, status, created_at, delivery_method,
                    item_subtotal, delivery_fee, total_amount`,
         [req.user.id, group.vendorId, customerPhone || null, deliveryNote || null,
-          deliveryMethod, itemSubtotal, deliveryFee, totalAmount]
+          deliveryMethod, deliveryAddress || null, itemSubtotal, deliveryFee, totalAmount]
       );
       const order = orderResult.rows[0];
       for (const product of productResult.rows) {
@@ -739,7 +616,7 @@ router.get("/orders/mine", requireAuth, requireStudent, async (req, res) => {
     const result = await pool.query(
       `SELECT o.id, o.vendor_id, v.business_name, o.customer_phone, o.delivery_note,
               o.delivery_method, o.delivery_address, o.item_subtotal, o.delivery_fee, o.total_amount,
-              o.status, o.payment_status, o.dispatch_status, dq.rider_name, dq.rider_phone,
+              o.status, o.payment_status,
               o.cancellation_reason, o.cancelled_by, o.created_at,
               COALESCE(json_agg(json_build_object(
                 'productName', oi.product_name,
@@ -748,10 +625,9 @@ router.get("/orders/mine", requireAuth, requireStudent, async (req, res) => {
               )) FILTER (WHERE oi.id IS NOT NULL), '[]'::json) AS items
        FROM vendor_orders o
        JOIN vendors v ON v.id = o.vendor_id
-       LEFT JOIN marketplace_dispatch_quotes dq ON dq.marketplace_payment_id = o.marketplace_payment_id
        LEFT JOIN vendor_order_items oi ON oi.order_id = o.id
        WHERE o.student_id = $1
-       GROUP BY o.id, v.business_name, dq.rider_name, dq.rider_phone
+       GROUP BY o.id, v.business_name
        ORDER BY o.created_at DESC`,
       [req.user.id]
     );

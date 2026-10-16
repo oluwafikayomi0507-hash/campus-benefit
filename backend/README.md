@@ -45,6 +45,6 @@ New vendor applications send a notification email to the email addresses of user
 
 New marketplace orders send a short email notification to the affected vendor after the order transaction commits. The email links to the vendor dashboard and does not include student contact details. If email delivery fails, the order remains saved and can still be viewed in the dashboard. The dashboard also refreshes the order inbox every 60 seconds while it is open.
 
-## Campus Benefit dispatch
+## Marketplace delivery
 
-For an existing database, run `dispatch-system.sql` after `marketplace-payments.sql` and before deploying the dispatch routes. It adds delivery addresses and statuses, stores the Paystack checkout URL so students can resume payment, and creates the Campus Benefit distance-quote and rider queue. Students request a quote for one vendor at a time; an administrator sets the fee from the Admin page before the student can pay. The dispatch team assigns a rider after the vendor marks the order ready, then records pickup and delivery from the same Admin page. Fresh databases get the same schema from `fresh-database.sql`.
+Vendors set one delivery fee per order in the vendor dashboard and arrange their own riders. Checkout adds each vendor's fee to the Paystack total and routes the fee to that vendor's payout account. Pickup is free. Student addresses and order notes are visible in the vendor's order inbox; vendors update the order through accepted, preparing, ready, and completed. Existing databases need the `vendor-delivery-fee.sql` migration before deploying this flow. `dispatch-system.sql` and its quote table are retained for compatibility with earlier staging data, but the application no longer uses the Campus Benefit quote or rider queue.

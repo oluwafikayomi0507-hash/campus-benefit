@@ -144,15 +144,10 @@ async function loadOrders() {
       address.textContent = `Delivery address: ${order.delivery_address}`;
       card.appendChild(address);
     }
-    if (order.dispatch_status && order.dispatch_status !== "not_requested") {
-      const dispatch = document.createElement("p");
-      dispatch.textContent = `Campus Benefit dispatch: ${order.dispatch_status.replaceAll("_", " ")}`;
-      card.appendChild(dispatch);
-      if (order.rider_name) {
-        const rider = document.createElement("p");
-        rider.textContent = `Rider: ${order.rider_name} · ${order.rider_phone}`;
-        card.appendChild(rider);
-      }
+    if (order.delivery_method === "delivery") {
+      const delivery = document.createElement("p");
+      delivery.textContent = `Vendor-arranged delivery · Fee: ₦${Number(order.delivery_fee || 0).toLocaleString()}`;
+      card.appendChild(delivery);
     }
     if (order.cancellation_reason) {
       const reason = document.createElement("p");
@@ -169,7 +164,6 @@ async function loadOrders() {
     };
     for (const [label, nextStatus] of nextActions[order.status] || []) {
       if (order.payment_status === "paid" && nextStatus === "cancelled") continue;
-      if (order.dispatch_status && order.dispatch_status !== "not_requested" && nextStatus === "completed") continue;
       actions.appendChild(statusButton(label, nextStatus, order.id));
     }
     if (order.payment_status === "paid" && order.status !== "completed" && order.status !== "cancelled") {
