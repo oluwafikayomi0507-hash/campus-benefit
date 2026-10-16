@@ -384,9 +384,9 @@ router.patch("/vendor/orders/:orderId/status", requireAuth, requireVendor, requi
     }
     const result = await pool.query(
       `UPDATE vendor_orders
-       SET status = $1,
-           cancellation_reason = CASE WHEN $1 = 'cancelled' THEN $5 ELSE cancellation_reason END,
-           cancelled_by = CASE WHEN $1 = 'cancelled' THEN 'vendor' ELSE cancelled_by END,
+       SET status = $1::varchar,
+           cancellation_reason = CASE WHEN $1::varchar = 'cancelled' THEN $5::text ELSE cancellation_reason END,
+           cancelled_by = CASE WHEN $1::varchar = 'cancelled' THEN 'vendor' ELSE cancelled_by END,
            updated_at = NOW()
        WHERE id = $2 AND vendor_id = $3 AND status = $4
        RETURNING id, status, updated_at`,
