@@ -13,6 +13,8 @@ const checkoutMessage = document.querySelector("#checkout-message");
 const checkoutButton = document.querySelector("#place-order");
 const deliveryMethodSelect = document.querySelector("#delivery-method");
 const studentOrdersElement = document.querySelector("#student-orders");
+const closedOrderRetentionMs = 5 * 60 * 1000;
+let closedOrderRefreshTimer;
 const cartStorageKey = "campusBenefitCart";
 const categoryNames = {
   food: "Food & drinks",
@@ -274,12 +276,28 @@ async function loadProducts() {
 async function loadStudentOrders() {
   try {
     const orders = await apiRequest("/api/orders/mine");
-    studentOrdersElement.replaceChildren();
-    if (!orders.length) {
-      studentOrdersElement.textContent = "Your placed orders will appear here.";
-      return;
+    const now = Date.now();
+    window.clearTimeout(closedOrderRefreshTimer);
+    const visibleOrders = orders.filter((order) => {
+      if (!["cancelled", "completed"].includes(order.status)) return true;
+      const updatedAt = Date.parse(order.updated_at || order.created_at);
+      return !Number.isFinite(updatedAt) || now - updatedAt < closedOrderRetentionMs;
+    });
+    const nextClosedOrderExpiry = orders
+      .filter((order) => ["cancelled", "completed"].includes(order.status))
+      .map((order) => Date.parse(order.updated_at || order.created_at) + closedOrderRetentionMs)
+      .filter((expiry) => Number.isFinite(expiry) && expiry > now)
+      .sort((a, b) => a - b)[0];
+    if (nextClosedOrderExpiry) {
+      closedOrderRefreshTimer = window.setTimeout(loadStudentOrders, nextClosedOrderExpiry - now);
     }
-    for (const order of orders) {
+    studentOrdersElement.replaceChildren();
+    if (!visibleOrders.length) {
+      studentOrdersElement.textContent = orders.length
+        ? "No current orders. Cancelled and delivered orders clear from this list after five minutes."
+        : "Your placed orders will appear here.";
+    } else {
+      for (const order of visibleOrders) {
       const card = document.createElement("article");
       card.className = "student-order-card";
       const heading = document.createElement("h3");
@@ -375,6 +393,7 @@ async function loadStudentOrders() {
         card.appendChild(note);
       }
       studentOrdersElement.appendChild(card);
+      }
     }
   } catch (error) {
     studentOrdersElement.textContent = error.message;
@@ -423,6 +442,9 @@ document.querySelector("#checkout-form")?.addEventListener("submit", async (even
 });
 
 document.querySelector("#refresh-orders")?.addEventListener("click", loadStudentOrders);
+window.setInterval(() => {
+  if (!document.hidden) void loadStudentOrders();
+}, 30_000);
 
 async function verifyMarketplacePaymentFromReturn() {
   const url = new URL(window.location.href);

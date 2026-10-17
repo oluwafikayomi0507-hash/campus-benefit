@@ -605,8 +605,8 @@ router.get("/orders/mine", requireAuth, requireStudent, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT o.id, o.vendor_id, v.business_name, o.customer_phone, o.delivery_note,
-              o.delivery_method, o.item_subtotal, o.delivery_fee, o.total_amount,
-              o.status, o.payment_status, o.cancellation_reason, o.cancelled_by, o.created_at,
+                o.delivery_method, o.delivery_address, o.item_subtotal, o.delivery_fee, o.total_amount,
+                o.status, o.payment_status, o.cancellation_reason, o.cancelled_by, o.created_at, o.updated_at,
               COALESCE(json_agg(json_build_object(
                 'productName', oi.product_name,
                 'unitPrice', oi.unit_price,
