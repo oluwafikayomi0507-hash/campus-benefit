@@ -16,6 +16,8 @@ const studentOrdersElement = document.querySelector("#student-orders");
 const deliveryAddressInput = document.querySelector("#delivery-address");
 const deliveryAddressLabel = document.querySelector("#delivery-address-label");
 const cartStorageKey = "campusBenefitCart";
+const closedOrderRetentionMs = 5 * 60 * 1000;
+let closedOrderRefreshTimer;
 const categoryNames = {
   food: "Food & drinks",
   beauty: "Beauty & grooming",
@@ -279,119 +281,136 @@ async function loadProducts() {
 async function loadStudentOrders() {
   try {
     const orders = await apiRequest("/api/orders/mine");
-    studentOrdersElement.replaceChildren();
-    if (!orders.length) {
-      studentOrdersElement.textContent = "Your placed orders will appear here.";
-      return;
+    const now = Date.now();
+    window.clearTimeout(closedOrderRefreshTimer);
+    const visibleOrders = orders.filter((order) => {
+      if (!["cancelled", "completed"].includes(order.status)) return true;
+      const updatedAt = Date.parse(order.updated_at || order.created_at);
+      return !Number.isFinite(updatedAt) || now - updatedAt < closedOrderRetentionMs;
+    });
+    const nextClosedOrderExpiry = orders
+      .filter((order) => ["cancelled", "completed"].includes(order.status))
+      .map((order) => Date.parse(order.updated_at || order.created_at) + closedOrderRetentionMs)
+      .filter((expiry) => Number.isFinite(expiry) && expiry > now)
+      .sort((a, b) => a - b)[0];
+    if (nextClosedOrderExpiry) {
+      closedOrderRefreshTimer = window.setTimeout(loadStudentOrders, nextClosedOrderExpiry - now);
     }
-    for (const order of orders) {
-      const card = document.createElement("article");
-      card.className = "student-order-card";
-      const heading = document.createElement("h3");
-      heading.textContent = `Order #${order.id} · ${order.business_name} · ${order.status}`;
-      card.appendChild(heading);
-      if (order.cancellation_reason) {
-        const reason = document.createElement("p");
-        reason.textContent = `${order.cancelled_by === "student" ? "Your" : "Vendor"} cancellation reason: ${order.cancellation_reason}`;
-        card.appendChild(reason);
-      }
-      for (const item of order.items) {
-        const line = document.createElement("p");
-        line.textContent = `${item.quantity} × ${item.productName} — ${money(item.unitPrice)}`;
-        card.appendChild(line);
-      }
-      const payment = document.createElement("p");
-      payment.textContent = order.payment_status === "paid"
-        ? "Payment: confirmed by Paystack"
-        : order.payment_status === "pending"
-          ? "Payment: waiting for Paystack confirmation"
-          : "Payment: arrange directly with the vendor";
-      card.appendChild(payment);
-      const method = document.createElement("p");
-      method.textContent = `Method: ${order.delivery_method}`;
-      const total = document.createElement("p");
-      total.textContent = `Items ${money(order.item_subtotal)} + delivery ${money(order.delivery_fee)} = ${money(order.total_amount)}`;
-      card.append(method, total);
-      if (order.delivery_method === "delivery") {
-        const delivery = document.createElement("p");
-        delivery.textContent = "Delivery is arranged by the vendor.";
-        card.appendChild(delivery);
-        if (order.delivery_address) {
-          const address = document.createElement("p");
-          address.textContent = `Delivery address: ${order.delivery_address}`;
-          card.appendChild(address);
+    studentOrdersElement.replaceChildren();
+    if (!visibleOrders.length) {
+      studentOrdersElement.textContent = orders.length
+        ? "No current orders. Cancelled and delivered orders clear from this list after five minutes."
+        : "Your placed orders will appear here.";
+    } else {
+      for (const order of visibleOrders) {
+        const card = document.createElement("article");
+        card.className = "student-order-card";
+        const heading = document.createElement("h3");
+        heading.textContent = `Order #${order.id} · ${order.business_name} · ${order.status}`;
+        card.appendChild(heading);
+        if (order.cancellation_reason) {
+          const reason = document.createElement("p");
+          reason.textContent = `${order.cancelled_by === "student" ? "Your" : "Vendor"} cancellation reason: ${order.cancellation_reason}`;
+          card.appendChild(reason);
         }
-      }
-      if (["pending", "accepted"].includes(order.status) && order.payment_status === "not_required") {
-        const cancel = document.createElement("button");
-        cancel.type = "button";
-        cancel.className = "refresh-button";
-        cancel.textContent = "Cancel order";
-        cancel.addEventListener("click", async () => {
-          if (card.querySelector(".order-cancel-form")) return;
-          cancel.hidden = true;
-          const cancelForm = document.createElement("form");
-          cancelForm.className = "order-cancel-form";
-          const reasonLabel = document.createElement("label");
-          reasonLabel.textContent = "Why do you need to cancel?";
-          const reasonInput = document.createElement("textarea");
-          reasonInput.required = true;
-          reasonInput.maxLength = 1000;
-          reasonInput.rows = 3;
-          reasonInput.placeholder = "Enter a reason for the vendor";
-          const cancelError = document.createElement("p");
-          cancelError.className = "vendors-message";
-          cancelError.setAttribute("role", "status");
-          const confirmCancel = document.createElement("button");
-          confirmCancel.type = "submit";
-          confirmCancel.className = "refresh-button";
-          confirmCancel.textContent = "Confirm cancellation";
-          const keepOrder = document.createElement("button");
-          keepOrder.type = "button";
-          keepOrder.className = "refresh-button";
-          keepOrder.textContent = "Keep order";
-          keepOrder.addEventListener("click", () => {
-            cancelForm.remove();
-            cancel.hidden = false;
-            cancel.focus();
+        for (const item of order.items) {
+          const line = document.createElement("p");
+          line.textContent = `${item.quantity} × ${item.productName} — ${money(item.unitPrice)}`;
+          card.appendChild(line);
+        }
+        const payment = document.createElement("p");
+        payment.textContent = order.payment_status === "paid"
+          ? "Payment: confirmed by Paystack"
+          : order.payment_status === "pending"
+            ? "Payment: waiting for Paystack confirmation"
+            : "Payment: arrange directly with the vendor";
+        card.appendChild(payment);
+        const method = document.createElement("p");
+        method.textContent = `Method: ${order.delivery_method}`;
+        const total = document.createElement("p");
+        total.textContent = `Items ${money(order.item_subtotal)} + delivery ${money(order.delivery_fee)} = ${money(order.total_amount)}`;
+        card.append(method, total);
+        if (order.delivery_method === "delivery") {
+          const delivery = document.createElement("p");
+          delivery.textContent = "Delivery is arranged by the vendor.";
+          card.appendChild(delivery);
+          if (order.delivery_address) {
+            const address = document.createElement("p");
+            address.textContent = `Delivery address: ${order.delivery_address}`;
+            card.appendChild(address);
+          }
+        }
+        if (["pending", "accepted"].includes(order.status) && order.payment_status === "not_required") {
+          const cancel = document.createElement("button");
+          cancel.type = "button";
+          cancel.className = "refresh-button";
+          cancel.textContent = "Cancel order";
+          cancel.addEventListener("click", async () => {
+            if (card.querySelector(".order-cancel-form")) return;
+            cancel.hidden = true;
+            const cancelForm = document.createElement("form");
+            cancelForm.className = "order-cancel-form";
+            const reasonLabel = document.createElement("label");
+            reasonLabel.textContent = "Why do you need to cancel?";
+            const reasonInput = document.createElement("textarea");
+            reasonInput.required = true;
+            reasonInput.maxLength = 1000;
+            reasonInput.rows = 3;
+            reasonInput.placeholder = "Enter a reason for the vendor";
+            const cancelError = document.createElement("p");
+            cancelError.className = "vendors-message";
+            cancelError.setAttribute("role", "status");
+            const confirmCancel = document.createElement("button");
+            confirmCancel.type = "submit";
+            confirmCancel.className = "refresh-button";
+            confirmCancel.textContent = "Confirm cancellation";
+            const keepOrder = document.createElement("button");
+            keepOrder.type = "button";
+            keepOrder.className = "refresh-button";
+            keepOrder.textContent = "Keep order";
+            keepOrder.addEventListener("click", () => {
+              cancelForm.remove();
+              cancel.hidden = false;
+              cancel.focus();
+            });
+            reasonLabel.appendChild(reasonInput);
+            cancelForm.append(reasonLabel, confirmCancel, keepOrder, cancelError);
+            cancelForm.addEventListener("submit", async (event) => {
+              event.preventDefault();
+              const reason = reasonInput.value.trim();
+              if (!reason) {
+                reasonInput.setCustomValidity("Enter a reason before cancelling this order.");
+                reasonInput.reportValidity();
+                return;
+              }
+              reasonInput.setCustomValidity("");
+              confirmCancel.disabled = true;
+              keepOrder.disabled = true;
+              cancelError.textContent = "Cancelling order...";
+              try {
+                await apiRequest(`/api/orders/${order.id}/cancel`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ reason }),
+                });
+                await loadStudentOrders();
+              } catch (error) {
+                cancelError.textContent = error.message;
+                confirmCancel.disabled = false;
+                keepOrder.disabled = false;
+              }
+            });
+            card.appendChild(cancelForm);
+            reasonInput.focus();
           });
-          reasonLabel.appendChild(reasonInput);
-          cancelForm.append(reasonLabel, confirmCancel, keepOrder, cancelError);
-          cancelForm.addEventListener("submit", async (event) => {
-            event.preventDefault();
-            const reason = reasonInput.value.trim();
-            if (!reason) {
-              reasonInput.setCustomValidity("Enter a reason before cancelling this order.");
-              reasonInput.reportValidity();
-              return;
-            }
-            reasonInput.setCustomValidity("");
-            confirmCancel.disabled = true;
-            keepOrder.disabled = true;
-            cancelError.textContent = "Cancelling order...";
-            try {
-              await apiRequest(`/api/orders/${order.id}/cancel`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ reason }),
-              });
-              await loadStudentOrders();
-            } catch (error) {
-              cancelError.textContent = error.message;
-              confirmCancel.disabled = false;
-              keepOrder.disabled = false;
-            }
-          });
-          card.appendChild(cancelForm);
-          reasonInput.focus();
-        });
-        card.appendChild(cancel);
-      } else if (order.payment_status === "paid" && order.status !== "completed" && order.status !== "cancelled") {
-        const note = document.createElement("p");
-        note.textContent = "This order is paid. Contact Campus Benefit support to request cancellation and refund review.";
-        card.appendChild(note);
+          card.appendChild(cancel);
+        } else if (order.payment_status === "paid" && order.status !== "completed" && order.status !== "cancelled") {
+          const note = document.createElement("p");
+          note.textContent = "This order is paid. Contact Campus Benefit support to request cancellation and refund review.";
+          card.appendChild(note);
+        }
+        studentOrdersElement.appendChild(card);
       }
-      studentOrdersElement.appendChild(card);
     }
   } catch (error) {
     studentOrdersElement.textContent = error.message;
@@ -442,6 +461,9 @@ document.querySelector("#checkout-form")?.addEventListener("submit", async (even
 });
 
 document.querySelector("#refresh-orders")?.addEventListener("click", loadStudentOrders);
+window.setInterval(() => {
+  if (!document.hidden) void loadStudentOrders();
+}, 30_000);
 
 async function verifyMarketplacePaymentFromReturn() {
   const url = new URL(window.location.href);
